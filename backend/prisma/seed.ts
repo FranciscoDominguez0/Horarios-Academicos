@@ -15,7 +15,7 @@ async function limpiarBaseDeDatos(): Promise<void> {
 }
 
 async function sembrarDatos(): Promise<void> {
-  console.log("-> Sembrando dataset para Salón Único (Aula 101) con resolución de cuellos de botella...");
+  console.log("-> Sembrando Plan de Estudios de Ingeniería en Informática variado y dinámico (mañana y tarde, 2h y 3h)...");
 
   // 1. Período Académico
   const periodo = await prisma.academic_periods.create({
@@ -27,27 +27,50 @@ async function sembrarDatos(): Promise<void> {
     },
   });
 
-  // 2. Un Solo Salón / Grupo de Estudiantes (Aula 101)
-  const grupo = await prisma.student_groups.create({
+  // 2. 3 Años Académicos
+  const grupo1 = await prisma.student_groups.create({
     data: {
-      code: "AULA-101",
-      name: "Aula 101 (Salón Único - Ingeniería Informática)",
+      code: "1ANO",
+      name: "1° Año - Ingeniería en Informática",
       semester_number: 1,
       student_count: 35,
       active: true,
     },
   });
 
-  // 3. 8 Docentes especialistas
+  const grupo2 = await prisma.student_groups.create({
+    data: {
+      code: "2ANO",
+      name: "2° Año - Ingeniería en Informática",
+      semester_number: 2,
+      student_count: 30,
+      active: true,
+    },
+  });
+
+  const grupo3 = await prisma.student_groups.create({
+    data: {
+      code: "3ANO",
+      name: "3° Año - Ingeniería en Informática",
+      semester_number: 3,
+      student_count: 28,
+      active: true,
+    },
+  });
+
+  // 3. 11 Docentes universitarios especializados
   const docentesData = [
-    { first_name: "Carlos", last_name: "Pérez (Algoritmos)", email: "carlos.perez@uni.edu" },
-    { first_name: "María", last_name: "Gómez (Cálculo)", email: "maria.gomez@uni.edu" },
-    { first_name: "Roberto", last_name: "Silva (Álgebra)", email: "roberto.silva@uni.edu" },
-    { first_name: "Juan", last_name: "Rodríguez (Física)", email: "juan.rodriguez@uni.edu" },
-    { first_name: "Laura", last_name: "Torres (Química)", email: "laura.torres@uni.edu" },
-    { first_name: "Diana", last_name: "Morales (Bases de Datos)", email: "diana.morales@uni.edu" },
-    { first_name: "Andrés", last_name: "Castro (Redes)", email: "andres.castro@uni.edu" },
-    { first_name: "Sofía", last_name: "Mendoza (Ética)", email: "sofia.mendoza@uni.edu" },
+    { first_name: "Carlos", last_name: "Pérez", email: "carlos.perez@uni.edu" }, // Doc 0: Algoritmos I (1°) y Estructuras II (2°)
+    { first_name: "María", last_name: "Gómez", email: "maria.gomez@uni.edu" }, // Doc 1: Cálculo I (1°) y Probabilidad (2°)
+    { first_name: "Roberto", last_name: "Silva", email: "roberto.silva@uni.edu" }, // Doc 2: Álgebra Lineal (1°)
+    { first_name: "Laura", last_name: "Torres", email: "laura.torres@uni.edu" }, // Doc 3: Intro. a la Informática (1°)
+    { first_name: "Felipe", last_name: "Ramos", email: "felipe.ramos@uni.edu" }, // Doc 4: Física Mecánica y Lab (1°)
+    { first_name: "Diana", last_name: "Morales", email: "diana.morales@uni.edu" }, // Doc 5: Bases de Datos I (2°) y BD Avanzadas (3°)
+    { first_name: "Andrés", last_name: "Castro", email: "andres.castro@uni.edu" }, // Doc 6: Arquitectura (2°) y Sistemas Operativos (3°)
+    { first_name: "Elena", last_name: "Cruz", email: "elena.cruz@uni.edu" }, // Doc 7: Programación Orientada a Objetos (2°)
+    { first_name: "Juan", last_name: "Rodríguez", email: "juan.rodriguez@uni.edu" }, // Doc 8: Redes y Telecomunicaciones (3°)
+    { first_name: "Sofía", last_name: "Mendoza", email: "sofia.mendoza@uni.edu" }, // Doc 9: Ingeniería de Software (3°)
+    { first_name: "Gabriel", last_name: "Vargas", email: "gabriel.vargas@uni.edu" }, // Doc 10: Inteligencia Artificial (3°)
   ];
 
   const docentes = [];
@@ -58,136 +81,303 @@ async function sembrarDatos(): Promise<void> {
     docentes.push(d);
   }
 
-  // 4. Disponibilidades docentes diseñadas para el Salón Único:
-  // Franjas de 2 horas (08:00 a 16:00):
-  // Bloque 1: 08:00-10:00 (480-600)
-  // Bloque 2: 10:00-12:00 (600-720)
-  // Bloque 3: 12:00-14:00 (720-840)
-  // Bloque 4: 14:00-16:00 (840-960)
+  // 4. Disponibilidades Docentes Orgánicas (Mornings y Afternoons distribuidos en la semana)
+  // 480 = 08:00, 660 = 11:00, 720 = 12:00, 780 = 13:00, 840 = 14:00, 1020 = 17:00, 1080 = 18:00
 
-  // Docente 0 (Carlos Pérez - Prog): Lun 8-12, Mié 8-12, y Mié 12-14 (alternativa de tarde)
+  // Carlos Pérez (1° y 2°): Lun 8-13 (480-780), Mié 14-18 (840-1080), Jue 8-12 (480-720)
   for (const d of [
-    { dia: 1, ini: 480, fin: 720 },
-    { dia: 3, ini: 480, fin: 720 },
-    { dia: 3, ini: 720, fin: 840 },
+    { dia: 1, ini: 480, fin: 780 },
+    { dia: 3, ini: 840, fin: 1080 },
+    { dia: 4, ini: 480, fin: 720 },
   ]) {
     await prisma.teacher_availability.create({
       data: { teacher_id: docentes[0].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
     });
   }
 
-  // Docente 1 (María Gómez - Cálculo): Lun 8-12, Mar 8-12
+  // María Gómez (1° y 2°): Lun 14-18 (840-1080), Mar 8-13 (480-780), Jue 14-18 (840-1080)
   for (const d of [
-    { dia: 1, ini: 480, fin: 720 },
-    { dia: 2, ini: 480, fin: 720 },
+    { dia: 1, ini: 840, fin: 1080 },
+    { dia: 2, ini: 480, fin: 780 },
+    { dia: 4, ini: 840, fin: 1080 },
   ]) {
     await prisma.teacher_availability.create({
       data: { teacher_id: docentes[1].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
     });
   }
 
-  // Docente 2 (Roberto Silva - Álgebra): Mar 8-12, Jue 8-12
+  // Roberto Silva (1°): Mar 14-17 (840-1020), Jue 9-12 (540-720)
   for (const d of [
-    { dia: 2, ini: 480, fin: 720 },
-    { dia: 4, ini: 480, fin: 720 },
+    { dia: 2, ini: 840, fin: 1020 },
+    { dia: 4, ini: 540, fin: 720 },
   ]) {
     await prisma.teacher_availability.create({
       data: { teacher_id: docentes[2].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
     });
   }
 
-  // Docente 3 (Juan Rodríguez - Física): Mié 8-12, Jue 8-12
+  // Laura Torres (1°): Mié 8-12 (480-720)
+  await prisma.teacher_availability.create({
+    data: { teacher_id: docentes[3].id, day_of_week: 3, start_minute: 480, end_minute: 720 },
+  });
+
+  // Felipe Ramos (1°): Mar 10-13 (600-780), Vie 8-12 (480-720)
   for (const d of [
-    { dia: 3, ini: 480, fin: 720 },
-    { dia: 4, ini: 480, fin: 720 },
+    { dia: 2, ini: 600, fin: 780 },
+    { dia: 5, ini: 480, fin: 720 },
   ]) {
     await prisma.teacher_availability.create({
-      data: { teacher_id: docentes[3].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
+      data: { teacher_id: docentes[4].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
     });
   }
 
-  // Docente 4 (Laura Torres - Química): SOLO a primera hora (08:00 a 10:00) de Lun a Vie
-  for (let dia = 1; dia <= 5; dia++) {
-    await prisma.teacher_availability.create({
-      data: { teacher_id: docentes[4].id, day_of_week: dia, start_minute: 480, end_minute: 600 },
-    });
-  }
-
-  // Docente 5 (Diana Morales - Bases de Datos): Lun 12-16, Mié 14-16
+  // Diana Morales (2° y 3°): Lun 9-13 (540-780), Mié 8-13 (480-780), Vie 14-18 (840-1080)
   for (const d of [
-    { dia: 1, ini: 720, fin: 960 },
-    { dia: 3, ini: 840, fin: 960 },
+    { dia: 1, ini: 540, fin: 780 },
+    { dia: 3, ini: 480, fin: 780 },
+    { dia: 5, ini: 840, fin: 1080 },
   ]) {
     await prisma.teacher_availability.create({
       data: { teacher_id: docentes[5].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
     });
   }
 
-  // Docente 6 (Andrés Castro - Redes): Mar 12-16, Jue 12-16
+  // Andrés Castro (2° y 3°): Mar 8-13 (480-780), Jue 13-18 (780-1080), Vie 8-12 (480-720)
   for (const d of [
-    { dia: 2, ini: 720, fin: 960 },
-    { dia: 4, ini: 720, fin: 960 },
+    { dia: 2, ini: 480, fin: 780 },
+    { dia: 4, ini: 780, fin: 1080 },
+    { dia: 5, ini: 480, fin: 720 },
   ]) {
     await prisma.teacher_availability.create({
       data: { teacher_id: docentes[6].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
     });
   }
 
-  // Docente 7 (Sofía Mendoza - Ética): Vie 10-16
-  await prisma.teacher_availability.create({
-    data: { teacher_id: docentes[7].id, day_of_week: 5, start_minute: 600, end_minute: 960 },
-  });
-
-  // 5. 8 Asignaturas del Salón
-  const asignaturasData = [
-    { code: "ALG-101", name: "Algoritmos y Programación I", credits: 4 },
-    { code: "MAT-101", name: "Cálculo Diferencial", credits: 4 },
-    { code: "MAT-102", name: "Álgebra Lineal", credits: 4 },
-    { code: "FIS-101", name: "Física Mecánica", credits: 4 },
-    { code: "QUI-101", name: "Química General", credits: 4 },
-    { code: "BD-101", name: "Bases de Datos I", credits: 4 },
-    { code: "RED-101", name: "Redes y Telecomunicaciones", credits: 4 },
-    { code: "ETI-101", name: "Ética y Deontología", credits: 4 },
-  ];
-
-  const asignaturas = [];
-  for (const asig of asignaturasData) {
-    const a = await prisma.subjects.create({ data: { ...asig, active: true } });
-    asignaturas.push(a);
+  // Elena Cruz (2°): Mié 13-17 (780-1020), Vie 10-14 (600-840)
+  for (const d of [
+    { dia: 3, ini: 780, fin: 1020 },
+    { dia: 5, ini: 600, fin: 840 },
+  ]) {
+    await prisma.teacher_availability.create({
+      data: { teacher_id: docentes[7].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
+    });
   }
 
-  // 6. Asignaciones académicas para el Salón Único (16 sesiones de 120 min = 32 horas semanales)
+  // Juan Rodríguez (3°): Lun 8-13 (480-780), Mié 8-13 (480-780)
+  for (const d of [
+    { dia: 1, ini: 480, fin: 780 },
+    { dia: 3, ini: 480, fin: 780 },
+  ]) {
+    await prisma.teacher_availability.create({
+      data: { teacher_id: docentes[8].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
+    });
+  }
+
+  // Sofía Mendoza (3°): Mar 13-17 (780-1020), Jue 8-12 (480-720)
+  for (const d of [
+    { dia: 2, ini: 780, fin: 1020 },
+    { dia: 4, ini: 480, fin: 720 },
+  ]) {
+    await prisma.teacher_availability.create({
+      data: { teacher_id: docentes[9].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
+    });
+  }
+
+  // Gabriel Vargas (3°): Lun 14-18 (840-1080), Vie 13-17 (780-1020)
+  for (const d of [
+    { dia: 1, ini: 840, fin: 1080 },
+    { dia: 5, ini: 780, fin: 1020 },
+  ]) {
+    await prisma.teacher_availability.create({
+      data: { teacher_id: docentes[10].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
+    });
+  }
+
+  // 5. Asignaturas de Ingeniería en Informática con Sesiones Variadas (2h y 3h)
+  const asignacionesConfig = [
+    // === 1° Año (5 materias: mezcla de 3h y 2h) ===
+    {
+      code: "INF-101",
+      name: "Algoritmos y Programación I",
+      credits: 5,
+      grupo: grupo1,
+      docente: docentes[0],
+      weekly_minutes: 300, // 5 horas
+      reqs: [{ duracion: 180, cant: 1 }, { duracion: 120, cant: 1 }], // 3h Lab + 2h Teoría
+    },
+    {
+      code: "MAT-101",
+      name: "Cálculo Diferencial e Integral",
+      credits: 5,
+      grupo: grupo1,
+      docente: docentes[1],
+      weekly_minutes: 300,
+      reqs: [{ duracion: 180, cant: 1 }, { duracion: 120, cant: 1 }],
+    },
+    {
+      code: "MAT-102",
+      name: "Álgebra Lineal y Geometría",
+      credits: 4,
+      grupo: grupo1,
+      docente: docentes[2],
+      weekly_minutes: 240,
+      reqs: [{ duracion: 120, cant: 2 }], // 2x 2h
+    },
+    {
+      code: "INF-102",
+      name: "Introducción a la Informática",
+      credits: 3,
+      grupo: grupo1,
+      docente: docentes[3],
+      weekly_minutes: 180,
+      reqs: [{ duracion: 180, cant: 1 }], // 1x 3h Taller
+    },
+    {
+      code: "FIS-101",
+      name: "Física Mecánica y Laboratorio",
+      credits: 4,
+      grupo: grupo1,
+      docente: docentes[4],
+      weekly_minutes: 240,
+      reqs: [{ duracion: 120, cant: 2 }],
+    },
+
+    // === 2° Año (5 materias) ===
+    {
+      code: "INF-201",
+      name: "Estructuras de Datos y Algoritmos II",
+      credits: 5,
+      grupo: grupo2,
+      docente: docentes[0], // Carlos Pérez compartido
+      weekly_minutes: 300,
+      reqs: [{ duracion: 180, cant: 1 }, { duracion: 120, cant: 1 }],
+    },
+    {
+      code: "MAT-201",
+      name: "Probabilidad y Estadística Aplicada",
+      credits: 4,
+      grupo: grupo2,
+      docente: docentes[1], // María Gómez compartida
+      weekly_minutes: 240,
+      reqs: [{ duracion: 120, cant: 2 }],
+    },
+    {
+      code: "INF-202",
+      name: "Bases de Datos I",
+      credits: 5,
+      grupo: grupo2,
+      docente: docentes[5], // Diana Morales
+      weekly_minutes: 300,
+      reqs: [{ duracion: 180, cant: 1 }, { duracion: 120, cant: 1 }],
+    },
+    {
+      code: "INF-203",
+      name: "Arquitectura de Computadores",
+      credits: 4,
+      grupo: grupo2,
+      docente: docentes[6], // Andrés Castro
+      weekly_minutes: 240,
+      reqs: [{ duracion: 120, cant: 2 }],
+    },
+    {
+      code: "INF-204",
+      name: "Programación Orientada a Objetos",
+      credits: 4,
+      grupo: grupo2,
+      docente: docentes[7], // Elena Cruz
+      weekly_minutes: 240,
+      reqs: [{ duracion: 120, cant: 2 }],
+    },
+
+    // === 3° Año (5 materias) ===
+    {
+      code: "INF-301",
+      name: "Redes y Telecomunicaciones",
+      credits: 5,
+      grupo: grupo3,
+      docente: docentes[8], // Juan Rodríguez
+      weekly_minutes: 300,
+      reqs: [{ duracion: 180, cant: 1 }, { duracion: 120, cant: 1 }],
+    },
+    {
+      code: "INF-302",
+      name: "Ingeniería de Software",
+      credits: 4,
+      grupo: grupo3,
+      docente: docentes[9], // Sofía Mendoza
+      weekly_minutes: 240,
+      reqs: [{ duracion: 120, cant: 2 }],
+    },
+    {
+      code: "INF-303",
+      name: "Sistemas Operativos",
+      credits: 5,
+      grupo: grupo3,
+      docente: docentes[6], // Andrés Castro compartido
+      weekly_minutes: 300,
+      reqs: [{ duracion: 180, cant: 1 }, { duracion: 120, cant: 1 }],
+    },
+    {
+      code: "INF-304",
+      name: "Bases de Datos Avanzadas",
+      credits: 4,
+      grupo: grupo3,
+      docente: docentes[5], // Diana Morales compartida
+      weekly_minutes: 240,
+      reqs: [{ duracion: 120, cant: 2 }],
+    },
+    {
+      code: "INF-305",
+      name: "Inteligencia Artificial",
+      credits: 4,
+      grupo: grupo3,
+      docente: docentes[10], // Gabriel Vargas
+      weekly_minutes: 240,
+      reqs: [{ duracion: 120, cant: 2 }],
+    },
+  ];
+
   let totalSesiones = 0;
-  for (let i = 0; i < asignaturas.length; i++) {
-    const asig = await prisma.course_assignments.create({
+  for (const item of asignacionesConfig) {
+    const sub = await prisma.subjects.create({
       data: {
-        period_id: periodo.id,
-        subject_id: asignaturas[i].id,
-        teacher_id: docentes[i].id,
-        group_id: grupo.id,
-        weekly_minutes: 240, // 4 horas por materia
+        code: item.code,
+        name: item.name,
+        credits: item.credits,
         active: true,
       },
     });
 
-    // 2 sesiones de 120 minutos cada una
-    await prisma.session_requirements.create({
+    const asig = await prisma.course_assignments.create({
       data: {
-        assignment_id: asig.id,
-        duration_minutes: 120,
-        quantity: 2,
+        period_id: periodo.id,
+        subject_id: sub.id,
+        teacher_id: item.docente.id,
+        group_id: item.grupo.id,
+        weekly_minutes: item.weekly_minutes,
+        active: true,
       },
     });
-    totalSesiones += 2;
+
+    for (const req of item.reqs) {
+      await prisma.session_requirements.create({
+        data: {
+          assignment_id: asig.id,
+          duration_minutes: req.duracion,
+          quantity: req.cant,
+        },
+      });
+      totalSesiones += req.cant;
+    }
   }
 
-  console.log("-> Dataset para Salón Único sembrado con éxito:");
-  console.log(`   - Período: ${periodo.name} (ID: ${periodo.id})`);
-  console.log(`   - Salón: ${grupo.name} (ID: ${grupo.id})`);
-  console.log(`   - ${docentes.length} Docentes con franjas entrelazadas.`);
-  console.log(`   - ${asignaturas.length} Asignaturas.`);
-  console.log(`   - ${asignaturas.length} Asignaciones académicas.`);
-  console.log(`   - ${totalSesiones} Sesiones semanales (todas en el Salón Único).`);
+  console.log("-> Seeder completado exitosamente:");
+  console.log(`   - Período: ${periodo.name}`);
+  console.log(`   - 3 Años: 1° Año, 2° Año, 3° Año (Ingeniería en Informática)`);
+  console.log(`   - Capacidad: 3 Salones simultáneos (Salón 101, Salón 102, Salón 103)`);
+  console.log(`   - ${docentes.length} Docentes universitarios con asignaciones compartidas`);
+  console.log(`   - ${asignacionesConfig.length} Asignaturas de Ingeniería en Informática (5 por año)`);
+  console.log(`   - ${totalSesiones} Sesiones semanales variadas (sesiones de 2h y 3h en mañana y tarde)`);
 }
 
 async function main() {

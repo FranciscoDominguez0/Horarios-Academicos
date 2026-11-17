@@ -10,6 +10,8 @@ export interface SesionCalendario {
   asignatura: string;
   docente: string;
   grupo: string;
+  salon?: string;
+  grupoCodigo?: string;
 }
 
 interface PropiedadesCalendario {
@@ -33,14 +35,23 @@ function formatearMinutos(minutos: number): string {
 }
 
 export const COLORES_MATERIAS: Record<string, string> = {
+  // 1° Año
   "Algoritmos y Programación I": "bg-blue-600 border-blue-700 text-white",
   "Cálculo Diferencial": "bg-emerald-600 border-emerald-700 text-white",
   "Álgebra Lineal": "bg-purple-600 border-purple-700 text-white",
-  "Física Mecánica": "bg-amber-600 border-amber-700 text-white",
-  "Química General": "bg-rose-600 border-rose-700 text-white",
-  "Bases de Datos I": "bg-teal-600 border-teal-700 text-white",
-  "Redes y Telecomunicaciones": "bg-indigo-600 border-indigo-700 text-white",
-  "Ética y Deontología": "bg-fuchsia-600 border-fuchsia-700 text-white",
+  "Introducción a la Informática": "bg-rose-600 border-rose-700 text-white",
+
+  // 2° Año
+  "Estructuras de Datos y Algoritmos II": "bg-sky-600 border-sky-700 text-white",
+  "Cálculo Integral y Vectorial": "bg-teal-600 border-teal-700 text-white",
+  "Bases de Datos I": "bg-amber-600 border-amber-700 text-white",
+  "Arquitectura de Computadores": "bg-indigo-600 border-indigo-700 text-white",
+
+  // 3° Año
+  "Sistemas Operativos": "bg-cyan-700 border-cyan-800 text-white",
+  "Bases de Datos Avanzadas": "bg-orange-600 border-orange-700 text-white",
+  "Redes y Telecomunicaciones": "bg-violet-600 border-violet-700 text-white",
+  "Ingeniería de Software": "bg-fuchsia-600 border-fuchsia-700 text-white",
 };
 
 export function obtenerColorMateria(asignatura: string): string {
@@ -67,6 +78,7 @@ interface EventoPosicionado extends SesionCalendario {
   totalColumnas: number;
   tieneConflictoDocente: boolean;
   tieneConflictoGrupo: boolean;
+  tieneConflictoSalon: boolean;
 }
 
 /**
@@ -132,6 +144,7 @@ function calcularDisposicionEventos(sesiones: SesionCalendario[]): EventoPosicio
     for (const { sesion, col } of eventosCluster) {
       let tieneConflictoDocente = false;
       let tieneConflictoGrupo = false;
+      let tieneConflictoSalon = false;
 
       for (const otro of cluster) {
         if (
@@ -141,6 +154,7 @@ function calcularDisposicionEventos(sesiones: SesionCalendario[]): EventoPosicio
         ) {
           if (otro.docente === sesion.docente) tieneConflictoDocente = true;
           if (otro.grupo === sesion.grupo) tieneConflictoGrupo = true;
+          if (otro.salon && sesion.salon && otro.salon === sesion.salon) tieneConflictoSalon = true;
         }
       }
 
@@ -150,6 +164,7 @@ function calcularDisposicionEventos(sesiones: SesionCalendario[]): EventoPosicio
         totalColumnas: totalCols,
         tieneConflictoDocente,
         tieneConflictoGrupo,
+        tieneConflictoSalon,
       });
     }
   }
@@ -174,9 +189,9 @@ export default function CalendarioSemanal({
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <h3 className="font-semibold text-slate-800 text-lg">Calendario Semanal — Salón Único: Aula 101</h3>
+          <h3 className="font-semibold text-slate-800 text-lg">Calendario Semanal — Distribución en 3 Salones y 3 Años</h3>
           <p className="text-xs text-slate-500">
-            Distribución secuencial de clases. En un salón único solo puede haber a lo sumo 1 materia a la vez.
+            Cada clase se asigna a uno de los 3 salones libres (Salón 101, 102 y 103). Un profesor o grupo nunca está en dos salones simultáneos.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -248,7 +263,7 @@ export default function CalendarioSemanal({
                 const anchoPorcentaje = 98 / item.totalColumnas;
                 const leftPorcentaje = 1 + item.columna * anchoPorcentaje;
 
-                const tieneConflicto = item.tieneConflictoDocente || item.tieneConflictoGrupo;
+                const tieneConflicto = item.tieneConflictoDocente || item.tieneConflictoGrupo || item.tieneConflictoSalon;
                 const colorClase = tieneConflicto
                   ? "bg-rose-700 border-rose-900 text-white shadow-md ring-2 ring-rose-400"
                   : obtenerColorMateria(item.asignatura);
@@ -262,29 +277,34 @@ export default function CalendarioSemanal({
                       left: `${leftPorcentaje}%`,
                       width: `${anchoPorcentaje}%`,
                     }}
-                    className={`absolute rounded-xl p-2.5 shadow-sm border flex flex-col justify-between overflow-hidden text-xs transition-all hover:z-20 hover:scale-[1.01] hover:shadow-lg ${colorClase}`}
+                    className={`absolute rounded-xl p-2 shadow-sm border flex flex-col justify-between overflow-hidden text-xs transition-all hover:z-20 hover:scale-[1.01] hover:shadow-lg ${colorClase}`}
                   >
                     <div>
                       {tieneConflicto && (
-                        <div className="bg-rose-950/90 text-rose-200 text-[10px] font-black uppercase px-1.5 py-0.5 rounded mb-1 truncate">
-                          ⚠️ {item.tieneConflictoDocente ? "Choque Docente" : "Choque Salón"}
+                        <div className="bg-rose-950/90 text-rose-200 text-[9px] font-black uppercase px-1.5 py-0.5 rounded mb-1 truncate">
+                          ⚠️ {item.tieneConflictoDocente ? "Choque Docente" : item.tieneConflictoSalon ? "Choque Salón" : "Choque Grupo"}
                         </div>
                       )}
-                      <p className="font-extrabold truncate text-xs leading-tight">
+                      <p className="font-extrabold truncate text-[11px] leading-tight">
                         {item.asignatura}
                       </p>
-                      <p className="text-[11px] opacity-90 truncate mt-0.5 flex items-center gap-1">
+                      <p className="text-[10px] opacity-90 truncate mt-0.5 flex items-center gap-1">
                         <span>👨‍🏫</span> {item.docente}
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between text-[10px] opacity-95 font-mono mt-1 pt-1 border-t border-white/20">
-                      <span className="font-semibold truncate bg-black/15 px-1 py-0.5 rounded">
-                        {item.grupo}
-                      </span>
-                      <span className="bg-black/15 px-1 py-0.5 rounded font-bold">
-                        {formatearMinutos(item.inicioMinuto)} - {formatearMinutos(item.finMinuto)}
-                      </span>
+                    <div className="space-y-0.5 pt-1 border-t border-white/20 text-[9px] opacity-95 font-mono">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold bg-black/25 px-1 py-0.5 rounded truncate">
+                          📍 {item.salon || "Salón"}
+                        </span>
+                        <span className="bg-black/25 px-1 py-0.5 rounded truncate">
+                          🎓 {item.grupo?.split(" - ")[0] || item.grupo}
+                        </span>
+                      </div>
+                      <div className="text-right font-bold">
+                        🕒 {formatearMinutos(item.inicioMinuto)} - {formatearMinutos(item.finMinuto)}
+                      </div>
                     </div>
                   </div>
                 );

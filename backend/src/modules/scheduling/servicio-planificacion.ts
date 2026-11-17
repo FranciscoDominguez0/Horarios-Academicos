@@ -139,6 +139,13 @@ export async function obtenerEjecucionPorId(idTexto: string) {
   };
 }
 
+const SALONES_DISPONIBLES = ["Salón 101", "Salón 102", "Salón 103"];
+const PREFERENCIA_SALON: Record<string, string> = {
+  "1ANO": "Salón 101",
+  "2ANO": "Salón 102",
+  "3ANO": "Salón 103",
+};
+
 export async function obtenerSesionesDeEjecucion(idTexto: string) {
   const runId = BigInt(idTexto);
   const sesiones = await prisma.schedule_sessions.findMany({
@@ -159,18 +166,63 @@ export async function obtenerSesionesDeEjecucion(idTexto: string) {
     orderBy: [{ day_of_week: "asc" }, { start_minute: "asc" }],
   });
 
-  return sesiones.map((s) => ({
-    id: s.id.toString(),
-    runId: s.run_id.toString(),
-    diaSemana: s.day_of_week,
-    inicioMinuto: s.start_minute,
-    finMinuto: s.end_minute,
-    numeroSesion: s.session_number,
-    duracionMinutos: s.session_requirements.duration_minutes,
-    asignatura: s.session_requirements.course_assignments.subjects.name,
-    grupo: s.session_requirements.course_assignments.student_groups.name,
-    docente: `${s.session_requirements.course_assignments.teachers.first_name} ${s.session_requirements.course_assignments.teachers.last_name}`,
-  }));
+  // Estructura para registrar ocupación de cada salón por día
+  const ocupacionSalones = new Map<string, Array<{ dia: number; inicio: number; fin: number }>>();
+  SALONES_DISPONIBLES.forEach((salon) => ocupacionSalones.set(salon, []));
+
+  return sesiones.map((s) => {
+    const dia = s.day_of_week;
+    const inicio = s.start_minute;
+    const fin = s.end_minute;
+    const grupoCodigo = s.session_requirements.course_assignments.student_groups.code;
+    const salonPreferido = PREFERENCIA_SALON[grupoCodigo] || "Salón 101";
+
+    // Intentar asignar salón preferido si está libre
+    let salonAsignado = "";
+    const ocupacionPref = ocupacionSalones.get(salonPreferido) ?? [];
+    const solapaPref = ocupacionPref.some(
+      (o) => o.dia === dia && Math.max(inicio, o.inicio) < Math.min(fin, o.fin)
+    );
+
+    if (!solapaPref) {
+      salonAsignado = salonPreferido;
+    } else {
+      // Buscar el primer salón libre entre los 3
+      for (const salon of SALONES_DISPONIBLES) {
+        const ocup = ocupacionSalones.get(salon) ?? [];
+        const solapa = ocup.some(
+          (o) => o.dia === dia && Math.max(inicio, o.inicio) < Math.min(fin, o.fin)
+        );
+        if (!solapa) {
+          salonAsignado = salon;
+          break;
+        }
+      }
+      if (!salonAsignado) {
+        salonAsignado = SALONES_DISPONIBLES[0];
+      }
+    }
+
+    // Registrar ocupación
+    const listaOcupacion = ocupacionSalones.get(salonAsignado) ?? [];
+    listaOcupacion.push({ dia, inicio, fin });
+    ocupacionSalones.set(salonAsignado, listaOcupacion);
+
+    return {
+      id: s.id.toString(),
+      runId: s.run_id.toString(),
+      diaSemana: s.day_of_week,
+      inicioMinuto: s.start_minute,
+      finMinuto: s.end_minute,
+      numeroSesion: s.session_number,
+      duracionMinutos: s.session_requirements.duration_minutes,
+      asignatura: s.session_requirements.course_assignments.subjects.name,
+      grupo: s.session_requirements.course_assignments.student_groups.name,
+      grupoCodigo,
+      salon: salonAsignado,
+      docente: `${s.session_requirements.course_assignments.teachers.first_name} ${s.session_requirements.course_assignments.teachers.last_name}`,
+    };
+  });
 }
 
 export async function listarEjecucionesDePeriodo(periodoId: number) {

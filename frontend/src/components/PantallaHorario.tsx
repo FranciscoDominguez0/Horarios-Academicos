@@ -11,6 +11,12 @@ interface PropiedadesHorario {
   totalSesionesRequeridas: number;
 }
 
+const ANOS_ACADEMICOS = [
+  { clave: "1° Año", codigo: "1ANO", nombre: "1° Año (Ingeniería en Informática)" },
+  { clave: "2° Año", codigo: "2ANO", nombre: "2° Año (Ingeniería en Informática)" },
+  { clave: "3° Año", codigo: "3ANO", nombre: "3° Año (Ingeniería en Informática)" },
+];
+
 export default function PantallaHorario({
   sesionesGreedy,
   sesionesBacktracking,
@@ -19,50 +25,36 @@ export default function PantallaHorario({
   totalSesionesRequeridas,
 }: PropiedadesHorario) {
   const [algoritmoActivo, setAlgoritmoActivo] = useState<"GREEDY" | "BACKTRACKING">("GREEDY");
-  const [materiaFiltro, setMateriaFiltro] = useState<string>("TODAS");
+  const [anoSeleccionado, setAnoSeleccionado] = useState<string>("1° Año");
 
   const sesionesActuales = algoritmoActivo === "GREEDY" ? sesionesGreedy : sesionesBacktracking;
   const infoActual = algoritmoActivo === "GREEDY" ? infoGreedy : infoBacktracking;
 
   const pendientes = totalSesionesRequeridas - sesionesActuales.length;
 
-  // Catálogo de asignaturas únicas con sus docentes para la leyenda
-  const asignaturasInfo = Array.from(
+  // Filtrar sesiones estrictamente por el Año seleccionado
+  const sesionesDelAno = sesionesActuales.filter((s) => {
+    const anoObj = ANOS_ACADEMICOS.find((a) => a.clave === anoSeleccionado);
+    return (
+      s.grupo.includes(anoSeleccionado) ||
+      (anoObj && s.grupoCodigo === anoObj.codigo)
+    );
+  });
+
+  // Catálogo de asignaturas exclusivas del año seleccionado
+  const materiasDelAno = Array.from(
     new Map(
-      [...sesionesBacktracking, ...sesionesGreedy].map((s) => [
+      sesionesDelAno.map((s) => [
         s.asignatura,
-        { asignatura: s.asignatura, docente: s.docente, grupo: s.grupo },
+        {
+          asignatura: s.asignatura,
+          docente: s.docente,
+          salon: s.salon || "Salón 101",
+          totalSesiones: sesionesDelAno.filter((x) => x.asignatura === s.asignatura).length,
+        },
       ])
     ).values()
   ).sort((a, b) => a.asignatura.localeCompare(b.asignatura));
-
-  // Detectar asignaturas con sesiones no asignadas en el algoritmo activo
-  const conteoBacktracking: Record<string, number> = {};
-  sesionesBacktracking.forEach((s) => {
-    conteoBacktracking[s.asignatura] = (conteoBacktracking[s.asignatura] || 0) + 1;
-  });
-
-  const conteoActual: Record<string, number> = {};
-  sesionesActuales.forEach((s) => {
-    conteoActual[s.asignatura] = (conteoActual[s.asignatura] || 0) + 1;
-  });
-
-  const asignaturasFaltantes = Object.entries(conteoBacktracking)
-    .filter(([asig, total]) => (conteoActual[asig] || 0) < total)
-    .map(([asig, total]) => {
-      const faltan = total - (conteoActual[asig] || 0);
-      const info = asignaturasInfo.find((a) => a.asignatura === asig);
-      return {
-        asignatura: asig,
-        faltan,
-        docente: info?.docente || "Docente asignado",
-      };
-    });
-
-  const sesionesParaMostrar =
-    materiaFiltro === "TODAS"
-      ? sesionesActuales
-      : sesionesActuales.filter((s) => s.asignatura === materiaFiltro);
 
   return (
     <div className="space-y-6">
@@ -101,17 +93,16 @@ export default function PantallaHorario({
 
       {/* Alertas de Validación y Sesiones Pendientes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Validación de Restricciones Duras */}
         <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-start gap-3 text-xs">
           <div className="p-2 rounded-lg bg-emerald-100 text-emerald-800 font-bold">
             ✓
           </div>
           <div>
-            <span className="font-bold text-slate-800 block">Validador Independiente (Restricciones Duras)</span>
+            <span className="font-bold text-slate-800 block">Validador Independiente</span>
             <p className="text-slate-600 mt-0.5">
               {infoActual && infoActual.conflictos === 0 ? (
                 <span className="text-emerald-700 font-semibold">
-                  0 conflictos detectados. Sin cruces de docente, sin cruces en el aula y dentro de disponibilidad.
+                  0 conflictos detectados. Sin solapamientos de docente, de grupo ni de salón.
                 </span>
               ) : (
                 <span className="text-amber-700 font-semibold">
@@ -122,7 +113,6 @@ export default function PantallaHorario({
           </div>
         </div>
 
-        {/* Sesiones Pendientes */}
         <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-start gap-3 text-xs">
           <div
             className={`p-2 rounded-lg font-bold ${
@@ -134,15 +124,15 @@ export default function PantallaHorario({
             {pendientes === 0 ? "★" : "!"}
           </div>
           <div>
-            <span className="font-bold text-slate-800 block">Cobertura de Sesiones</span>
+            <span className="font-bold text-slate-800 block">Cobertura Institucional</span>
             <p className="text-slate-600 mt-0.5">
               {pendientes === 0 ? (
                 <span className="text-indigo-700 font-semibold">
-                  100% de las sesiones semanales asignadas exitosamente ({sesionesActuales.length} de {totalSesionesRequeridas}).
+                  100% de las sesiones académicas ubicadas exitosamente ({sesionesActuales.length} de {totalSesionesRequeridas}).
                 </span>
               ) : (
                 <span className="text-amber-700 font-semibold">
-                  {pendientes} sesión(es) quedaron pendientes por óptimo local (Greedy no puede retroceder).
+                  {pendientes} sesión(es) pendientes por decisiones locales irrevocables en Greedy.
                 </span>
               )}
             </p>
@@ -150,109 +140,84 @@ export default function PantallaHorario({
         </div>
       </div>
 
-      {/* Alerta de Sesión No Asignada en Greedy */}
-      {algoritmoActivo === "GREEDY" && asignaturasFaltantes.length > 0 && (
-        <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 text-xs text-rose-950 flex items-start gap-3 shadow-sm">
-          <div className="p-2 rounded-lg bg-rose-200 text-rose-800 font-black text-sm">
-            ✕
-          </div>
-          <div className="space-y-1">
-            <span className="font-bold text-rose-900 block text-sm">
-              Sesión No Asignada en Algoritmos voraces (Greedy)
-            </span>
-            <div className="text-rose-800 leading-relaxed">
-              {asignaturasFaltantes.map((f) => (
-                <div key={f.asignatura} className="mt-1">
-                  • Asignatura: <strong>{f.asignatura}</strong> ({f.faltan} sesión pendiente de 120 min) — Docente: <em>{f.docente}</em>.
-                  <p className="text-[11px] text-rose-700 mt-0.5">
-                    <strong>Causa algorítmica:</strong> La docente Laura Torres solo puede impartir clases en el bloque de 08:00 a 10:00. Al resolver de forma voraz (Greedy), el algoritmo ocupó irreversiblemente todas las franjas matutinas con Cálculo, Álgebra, Física y Algoritmos I. Al llegar a Química General, ya no quedaban cupos matutinos disponibles y el algoritmo voraz no tiene capacidad de retroceder ni reubicar asignaciones previas.
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Alerta de Cobertura Exitosa en Backtracking */}
-      {algoritmoActivo === "BACKTRACKING" && pendientes === 0 && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-xs text-emerald-950 flex items-start gap-3 shadow-sm">
-          <div className="p-2 rounded-lg bg-emerald-200 text-emerald-800 font-black text-sm">
-            ✓
-          </div>
-          <div className="space-y-1">
-            <span className="font-bold text-emerald-900 block text-sm">
-              100% de Cobertura Lograda en el Salón Único
-            </span>
-            <p className="text-emerald-800 leading-relaxed">
-              El <strong>Algoritmo de Retroceso (Backtracking)</strong> exploró sistemáticamente el árbol combinatorio. Al toparse con el cuello de botella matutino, realizó <strong>118 retrocesos con poda</strong>, desarmó decisiones previas y reacomodó las demás asignaturas en bloques de 10:00 a 16:00, logrando liberar una franja de 08:00 a 10:00 para <strong>Química General (Laura Torres)</strong> con cero choques de aula.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Salón Único y Leyenda de Asignaturas con Código de Color */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 text-xs shadow-sm space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+      {/* Pestañas de Selección de Año Académico */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-800 text-sm">Salón Asignado: Aula 101 (Salón Único)</span>
-              <span className="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                Capacidad: 1 clase simultánea
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              Jornada de Lunes a Viernes (08:00 a 16:00). Haz clic en una materia para aislarla o pulsa &ldquo;Todas las materias&rdquo;.
+            <span className="font-bold text-slate-900 text-sm">Selecciona el Año Académico:</span>
+            <p className="text-xs text-slate-500">
+              Visualiza el horario semanal y la distribución de materias y salones de cada año.
             </p>
           </div>
-          <button
-            onClick={() => setMateriaFiltro("TODAS")}
-            className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${
-              materiaFiltro === "TODAS"
-                ? "bg-slate-900 text-white shadow-sm"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            Todas las materias ({sesionesActuales.length})
-          </button>
+
+          <div className="flex gap-2">
+            {ANOS_ACADEMICOS.map((ano) => {
+              const estaActivo = anoSeleccionado === ano.clave;
+              const cantidad = sesionesActuales.filter(
+                (s) => s.grupo.includes(ano.clave) || s.grupoCodigo === ano.codigo
+              ).length;
+
+              return (
+                <button
+                  key={ano.clave}
+                  onClick={() => setAnoSeleccionado(ano.clave)}
+                  className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 ${
+                    estaActivo
+                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-100 ring-2 ring-indigo-400"
+                      : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                  }`}
+                >
+                  <span>🎓</span>
+                  <span>{ano.clave}</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-md ${
+                      estaActivo ? "bg-white/20 text-white" : "bg-white text-slate-600"
+                    }`}
+                  >
+                    {cantidad} clases
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Chips de Leyenda de Colores */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 pt-1">
-          {asignaturasInfo.map((item) => {
-            const cantSesiones = sesionesActuales.filter((s) => s.asignatura === item.asignatura).length;
-            const esSeleccionada = materiaFiltro === item.asignatura;
-            const colorClase = obtenerColorMateria(item.asignatura);
-            const colorBg = colorClase.split(" ")[0];
+        {/* Leyenda de Asignaturas Exclusiva del Año Seleccionado */}
+        <div className="pt-3 border-t border-slate-100">
+          <span className="text-xs font-bold text-slate-700 block mb-2">
+            Materias de {anoSeleccionado}:
+          </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
+            {materiasDelAno.map((item) => {
+              const colorClase = obtenerColorMateria(item.asignatura);
+              const colorBg = colorClase.split(" ")[0];
 
-            return (
-              <button
-                key={item.asignatura}
-                onClick={() => setMateriaFiltro(materiaFiltro === item.asignatura ? "TODAS" : item.asignatura)}
-                className={`p-2.5 rounded-lg border text-left transition-all flex items-center justify-between gap-2 ${
-                  esSeleccionada
-                    ? "ring-2 ring-indigo-500 bg-indigo-50/50 border-indigo-300"
-                    : "bg-slate-50/50 hover:bg-slate-100 border-slate-200"
-                }`}
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span className={`w-3.5 h-3.5 rounded-md flex-shrink-0 shadow-sm ${colorBg}`} />
-                  <div className="min-w-0">
-                    <p className="font-bold text-[11px] text-slate-800 truncate">{item.asignatura}</p>
-                    <p className="text-[10px] text-slate-500 truncate">{item.docente}</p>
+              return (
+                <div
+                  key={item.asignatura}
+                  className="p-2.5 bg-slate-50/80 rounded-xl border border-slate-200/80 flex flex-col justify-between text-xs"
+                >
+                  <div className="flex items-start gap-2">
+                    <span className={`w-3 h-3 rounded-md mt-0.5 flex-shrink-0 ${colorBg}`} />
+                    <span className="font-bold text-slate-800 leading-tight text-[11px]">
+                      {item.asignatura}
+                    </span>
+                  </div>
+                  <div className="mt-2 pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-500">
+                    <span className="truncate">👨‍🏫 {item.docente}</span>
+                    <span className="font-semibold text-slate-700 bg-white px-1.5 py-0.5 rounded border border-slate-200 flex-shrink-0">
+                      📍 {item.salon}
+                    </span>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono font-bold text-slate-600 bg-white px-1.5 py-0.5 rounded border border-slate-200 flex-shrink-0">
-                  {cantSesiones}
-                </span>
-              </button>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Calendario Semanal */}
-      <CalendarioSemanal sesiones={sesionesParaMostrar} />
+      {/* Calendario Semanal del Año Seleccionado */}
+      <CalendarioSemanal sesiones={sesionesDelAno} />
     </div>
   );
 }
