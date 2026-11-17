@@ -111,6 +111,7 @@ export function ejecutarPlanificacionGreedy(
 
   return {
     algoritmo: "GREEDY",
+    estado: "COMPLETED",
     completado: sesionesPendientes.length === 0,
     sesionesAsignadas,
     sesionesPendientes,

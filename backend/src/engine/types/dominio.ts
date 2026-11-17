@@ -113,6 +113,8 @@ export interface ResultadoValidacion {
   totalSesionesAsignadas: number;
 }
 
+export type EstadoPlanificacion = "COMPLETED" | "NO_SOLUTION" | "LIMIT_REACHED";
+
 export interface MetricasEjecucion {
   tiempoMs: number;
   operaciones: number;
@@ -122,6 +124,7 @@ export interface MetricasEjecucion {
 
 export interface ResultadoPlanificacion {
   algoritmo: "GREEDY" | "BACKTRACKING";
+  estado: EstadoPlanificacion;
   completado: boolean;
   sesionesAsignadas: SesionAsignada[];
   sesionesPendientes: SesionProgramable[];
