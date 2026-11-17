@@ -4,7 +4,13 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import { prisma } from "./config/database.js";
+import { enrutadorPeriodos } from "./modules/periods/rutas-periodos.js";
+import { enrutadorDocentes } from "./modules/teachers/rutas-docentes.js";
+import { enrutadorMaterias } from "./modules/subjects/rutas-materias.js";
+import { enrutadorGrupos } from "./modules/groups/rutas-grupos.js";
+import { enrutadorAsignaciones } from "./modules/assignments/rutas-asignaciones.js";
 import { enrutadorPlanificacion } from "./modules/scheduling/rutas-planificacion.js";
+import { enrutadorAnalitica } from "./modules/analytics/rutas-analitica.js";
 
 dotenv.config();
 
@@ -13,7 +19,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use("/api/periods", enrutadorPeriodos);
+app.use("/api/teachers", enrutadorDocentes);
+app.use("/api/subjects", enrutadorMaterias);
+app.use("/api/groups", enrutadorGrupos);
+app.use("/api/assignments", enrutadorAsignaciones);
 app.use("/api/scheduling", enrutadorPlanificacion);
+app.use("/api/analytics", enrutadorAnalitica);
 
 app.get("/", (req, res) => {
     res.json({
