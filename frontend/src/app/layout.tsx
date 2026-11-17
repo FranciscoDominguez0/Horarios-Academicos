@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Academic Scheduler - Asignación Automática de Horarios",
-  description: "Optimización de horarios académicos mediante Greedy y Backtracking",
+  description: "Optimización de horarios académicos mediante Algoritmos voraces (Greedy) y Backtracking",
 };
 
 export default function RootLayout({

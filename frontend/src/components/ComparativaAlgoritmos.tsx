@@ -47,6 +47,12 @@ export default function ComparativaAlgoritmos({ datos }: PropiedadesComparativa)
 
   const { runA, runB, resumen } = datos;
 
+  const formatearNombre = (alg: string) => {
+    if (alg === "GREEDY") return "Algoritmos voraces (Greedy)";
+    if (alg === "BACKTRACKING") return "Algoritmo de Retroceso (Backtracking)";
+    return alg;
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-indigo-900 to-slate-900 text-white rounded-2xl p-6 shadow-md">
@@ -68,7 +74,7 @@ export default function ComparativaAlgoritmos({ datos }: PropiedadesComparativa)
         {/* Tarjeta Algoritmo A */}
         <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <span className="font-bold text-slate-800 text-lg">{runA.algoritmo}</span>
+            <span className="font-bold text-slate-800 text-lg">{formatearNombre(runA.algoritmo)}</span>
             <span className="text-xs font-semibold px-2.5 py-1 bg-amber-50 text-amber-700 rounded-md">
               Heurístico Voraz
             </span>
@@ -101,7 +107,7 @@ export default function ComparativaAlgoritmos({ datos }: PropiedadesComparativa)
         {/* Tarjeta Algoritmo B */}
         <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <span className="font-bold text-slate-800 text-lg">{runB.algoritmo}</span>
+            <span className="font-bold text-slate-800 text-lg">{formatearNombre(runB.algoritmo)}</span>
             <span className="text-xs font-semibold px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-md">
               Búsqueda Exhaustiva
             </span>

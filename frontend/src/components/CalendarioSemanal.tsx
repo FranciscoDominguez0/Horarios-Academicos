@@ -32,6 +32,131 @@ function formatearMinutos(minutos: number): string {
   return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
 }
 
+export const COLORES_MATERIAS: Record<string, string> = {
+  "Algoritmos y Programación I": "bg-blue-600 border-blue-700 text-white",
+  "Cálculo Diferencial": "bg-emerald-600 border-emerald-700 text-white",
+  "Álgebra Lineal": "bg-purple-600 border-purple-700 text-white",
+  "Física Mecánica": "bg-amber-600 border-amber-700 text-white",
+  "Química General": "bg-rose-600 border-rose-700 text-white",
+  "Bases de Datos I": "bg-teal-600 border-teal-700 text-white",
+  "Redes y Telecomunicaciones": "bg-indigo-600 border-indigo-700 text-white",
+  "Ética y Deontología": "bg-fuchsia-600 border-fuchsia-700 text-white",
+};
+
+export function obtenerColorMateria(asignatura: string): string {
+  if (COLORES_MATERIAS[asignatura]) {
+    return COLORES_MATERIAS[asignatura];
+  }
+  const paleta = [
+    "bg-sky-600 border-sky-700 text-white",
+    "bg-violet-600 border-violet-700 text-white",
+    "bg-pink-600 border-pink-700 text-white",
+    "bg-teal-600 border-teal-700 text-white",
+    "bg-orange-600 border-orange-700 text-white",
+    "bg-lime-600 border-lime-700 text-white",
+  ];
+  let hash = 0;
+  for (let i = 0; i < asignatura.length; i++) {
+    hash = (hash + asignatura.charCodeAt(i)) % paleta.length;
+  }
+  return paleta[hash];
+}
+
+interface EventoPosicionado extends SesionCalendario {
+  columna: number;
+  totalColumnas: number;
+  tieneConflictoDocente: boolean;
+  tieneConflictoGrupo: boolean;
+}
+
+/**
+ * Algoritmo de diseño de eventos simultáneos (sub-columnas dinámicas sin solapamiento).
+ * Permite que todas las clases que ocurren a la misma hora en distintos grupos
+ * se muestren una al lado de la otra de forma visible y legible.
+ */
+function calcularDisposicionEventos(sesiones: SesionCalendario[]): EventoPosicionado[] {
+  if (sesiones.length === 0) return [];
+
+  // Ordenar por hora de inicio y luego por duración
+  const ordenadas = [...sesiones].sort((a, b) => {
+    if (a.inicioMinuto !== b.inicioMinuto) return a.inicioMinuto - b.inicioMinuto;
+    return (b.finMinuto - b.inicioMinuto) - (a.finMinuto - a.inicioMinuto);
+  });
+
+  // Agrupar en clusters de solapamiento
+  const clusters: SesionCalendario[][] = [];
+  let clusterActual: SesionCalendario[] = [];
+  let clusterFinMinuto = -1;
+
+  for (const sesion of ordenadas) {
+    if (clusterActual.length === 0) {
+      clusterActual.push(sesion);
+      clusterFinMinuto = sesion.finMinuto;
+    } else if (sesion.inicioMinuto < clusterFinMinuto) {
+      clusterActual.push(sesion);
+      clusterFinMinuto = Math.max(clusterFinMinuto, sesion.finMinuto);
+    } else {
+      clusters.push(clusterActual);
+      clusterActual = [sesion];
+      clusterFinMinuto = sesion.finMinuto;
+    }
+  }
+  if (clusterActual.length > 0) {
+    clusters.push(clusterActual);
+  }
+
+  const resultado: EventoPosicionado[] = [];
+
+  for (const cluster of clusters) {
+    const columnasFin: number[] = [];
+    const eventosCluster: Array<{ sesion: SesionCalendario; col: number }> = [];
+
+    for (const sesion of cluster) {
+      let asignada = false;
+      for (let c = 0; c < columnasFin.length; c++) {
+        if (sesion.inicioMinuto >= columnasFin[c]) {
+          columnasFin[c] = sesion.finMinuto;
+          eventosCluster.push({ sesion, col: c });
+          asignada = true;
+          break;
+        }
+      }
+      if (!asignada) {
+        columnasFin.push(sesion.finMinuto);
+        eventosCluster.push({ sesion, col: columnasFin.length - 1 });
+      }
+    }
+
+    const totalCols = columnasFin.length;
+
+    for (const { sesion, col } of eventosCluster) {
+      let tieneConflictoDocente = false;
+      let tieneConflictoGrupo = false;
+
+      for (const otro of cluster) {
+        if (
+          otro.id !== sesion.id &&
+          sesion.inicioMinuto < otro.finMinuto &&
+          otro.inicioMinuto < sesion.finMinuto
+        ) {
+          if (otro.docente === sesion.docente) tieneConflictoDocente = true;
+          if (otro.grupo === sesion.grupo) tieneConflictoGrupo = true;
+        }
+      }
+
+      resultado.push({
+        ...sesion,
+        columna: col,
+        totalColumnas: totalCols,
+        tieneConflictoDocente,
+        tieneConflictoGrupo,
+      });
+    }
+  }
+
+  return resultado;
+}
+
 export default function CalendarioSemanal({
   sesiones,
   jornadaInicioMinuto = 420, // 07:00
@@ -39,16 +164,33 @@ export default function CalendarioSemanal({
 }: PropiedadesCalendario) {
   const duracionTotalJornada = jornadaFinMinuto - jornadaInicioMinuto;
 
+  // Generar marcas de hora para la regla lateral (07:00, 08:00 ... 18:00)
+  const horasGuia: number[] = [];
+  for (let min = jornadaInicioMinuto; min <= jornadaFinMinuto; min += 60) {
+    horasGuia.push(min);
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-      <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-        <h3 className="font-semibold text-slate-800 text-lg">Calendario Semanal</h3>
-        <span className="text-xs bg-indigo-50 text-indigo-700 font-medium px-2.5 py-1 rounded-full">
-          {sesiones.length} sesiones programadas
-        </span>
+      <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h3 className="font-semibold text-slate-800 text-lg">Calendario Semanal — Salón Único: Aula 101</h3>
+          <p className="text-xs text-slate-500">
+            Distribución secuencial de clases. En un salón único solo puede haber a lo sumo 1 materia a la vez.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-full">
+            {sesiones.length} sesiones visibles
+          </span>
+        </div>
       </div>
 
-      <div className="grid grid-cols-5 border-b border-slate-200 bg-slate-50 text-center font-medium text-xs text-slate-600">
+      {/* Cabecera de Días con columna para horas */}
+      <div className="grid grid-cols-[60px_repeat(5,1fr)] border-b border-slate-200 bg-slate-50 text-center font-medium text-xs text-slate-600">
+        <div className="py-2.5 border-r border-slate-200 text-slate-400 font-mono text-[10px]">
+          Hora
+        </div>
         {DIAS.map((dia) => (
           <div key={dia.id} className="py-2.5 border-r last:border-r-0 border-slate-200">
             {dia.nombre}
@@ -56,20 +198,60 @@ export default function CalendarioSemanal({
         ))}
       </div>
 
-      <div className="grid grid-cols-5 relative h-[560px] bg-slate-50/30">
+      {/* Cuerpo del Calendario con Cuadrícula */}
+      <div className="grid grid-cols-[60px_repeat(5,1fr)] relative h-[650px] bg-slate-50/20 overflow-y-auto">
+        {/* Columna Lateral de Horas */}
+        <div className="relative border-r border-slate-200 select-none bg-slate-50/50">
+          {horasGuia.map((min) => {
+            const top = ((min - jornadaInicioMinuto) / duracionTotalJornada) * 100;
+            return (
+              <div
+                key={min}
+                style={{ top: `${top}%` }}
+                className="absolute left-0 right-1 text-right text-[10px] font-mono text-slate-400 -translate-y-1/2 pr-1"
+              >
+                {formatearMinutos(min)}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 5 Columnas de Días */}
         {DIAS.map((dia) => {
           const sesionesDelDia = sesiones.filter((s) => s.diaSemana === dia.id);
+          const eventosPosicionados = calcularDisposicionEventos(sesionesDelDia);
 
           return (
             <div
               key={dia.id}
-              className="relative border-r last:border-r-0 border-slate-200 h-full p-1"
+              className="relative border-r last:border-r-0 border-slate-200 h-full"
             >
-              {sesionesDelDia.map((item) => {
+              {/* Líneas Guía Horizontales de Cada Hora */}
+              {horasGuia.map((min) => {
+                const top = ((min - jornadaInicioMinuto) / duracionTotalJornada) * 100;
+                return (
+                  <div
+                    key={min}
+                    style={{ top: `${top}%` }}
+                    className="absolute left-0 right-0 border-b border-dashed border-slate-200/80 pointer-events-none"
+                  />
+                );
+              })}
+
+              {/* Tarjetas de Sesión Posicionadas Dinámicamente */}
+              {eventosPosicionados.map((item) => {
                 const topPorcentaje =
                   ((item.inicioMinuto - jornadaInicioMinuto) / duracionTotalJornada) * 100;
                 const alturaPorcentaje =
                   ((item.finMinuto - item.inicioMinuto) / duracionTotalJornada) * 100;
+
+                const anchoPorcentaje = 98 / item.totalColumnas;
+                const leftPorcentaje = 1 + item.columna * anchoPorcentaje;
+
+                const tieneConflicto = item.tieneConflictoDocente || item.tieneConflictoGrupo;
+                const colorClase = tieneConflicto
+                  ? "bg-rose-700 border-rose-900 text-white shadow-md ring-2 ring-rose-400"
+                  : obtenerColorMateria(item.asignatura);
 
                 return (
                   <div
@@ -77,16 +259,30 @@ export default function CalendarioSemanal({
                     style={{
                       top: `${Math.max(0, topPorcentaje)}%`,
                       height: `${Math.max(4, alturaPorcentaje)}%`,
+                      left: `${leftPorcentaje}%`,
+                      width: `${anchoPorcentaje}%`,
                     }}
-                    className="absolute left-1 right-1 rounded-lg p-2 bg-indigo-600 text-white shadow-sm border border-indigo-700 flex flex-col justify-between overflow-hidden text-xs transition-all hover:z-10 hover:shadow-md"
+                    className={`absolute rounded-xl p-2.5 shadow-sm border flex flex-col justify-between overflow-hidden text-xs transition-all hover:z-20 hover:scale-[1.01] hover:shadow-lg ${colorClase}`}
                   >
                     <div>
-                      <p className="font-bold truncate">{item.asignatura}</p>
-                      <p className="text-[10px] text-indigo-100 truncate">{item.docente}</p>
+                      {tieneConflicto && (
+                        <div className="bg-rose-950/90 text-rose-200 text-[10px] font-black uppercase px-1.5 py-0.5 rounded mb-1 truncate">
+                          ⚠️ {item.tieneConflictoDocente ? "Choque Docente" : "Choque Salón"}
+                        </div>
+                      )}
+                      <p className="font-extrabold truncate text-xs leading-tight">
+                        {item.asignatura}
+                      </p>
+                      <p className="text-[11px] opacity-90 truncate mt-0.5 flex items-center gap-1">
+                        <span>👨‍🏫</span> {item.docente}
+                      </p>
                     </div>
-                    <div className="flex justify-between items-center text-[10px] text-indigo-200 font-mono mt-1">
-                      <span>{item.grupo}</span>
-                      <span>
+
+                    <div className="flex items-center justify-between text-[10px] opacity-95 font-mono mt-1 pt-1 border-t border-white/20">
+                      <span className="font-semibold truncate bg-black/15 px-1 py-0.5 rounded">
+                        {item.grupo}
+                      </span>
+                      <span className="bg-black/15 px-1 py-0.5 rounded font-bold">
                         {formatearMinutos(item.inicioMinuto)} - {formatearMinutos(item.finMinuto)}
                       </span>
                     </div>

@@ -39,7 +39,7 @@ export default function PantallaEjecucion({
   onVerComparativa,
 }: PropiedadesEjecucion) {
   const [modo, setModo] = useState<ModoEjecucion>("AMBOS");
-  const [pasoCuadricula, setPasoCuadricula] = useState<number>(30);
+  const [pasoCuadricula, setPasoCuadricula] = useState<number>(60);
   const [jornadaInicio, setJornadaInicio] = useState<number>(420); // 07:00
   const [jornadaFin, setJornadaFin] = useState<number>(1080); // 18:00
 
@@ -56,16 +56,16 @@ export default function PantallaEjecucion({
       {/* Columna Izquierda: Formulario de Configuración y Disparo */}
       <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Configuración y Ejecución</h2>
+          <h2 className="text-xl font-bold text-slate-900">Configuración y Ejecución de Algoritmos de Optimización</h2>
           <p className="text-xs text-slate-500 mt-1">
-            Selecciona el algoritmo y los parámetros de búsqueda para el Período #{periodoId}
+            Selecciona la estrategia algorítmica para resolver el Problema de Satisfacción de Restricciones (CSP) en el Período #{periodoId}
           </p>
         </div>
 
         {/* 1. Selección de Algoritmo */}
         <div>
           <label className="block text-xs font-bold uppercase text-slate-500 tracking-wider mb-2">
-            Seleccionar Estrategia
+            Seleccionar Estrategia Algorítmica
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Opción Greedy */}
@@ -77,9 +77,9 @@ export default function PantallaEjecucion({
                   : "border-slate-200 hover:border-slate-300 bg-slate-50/50 text-slate-700"
               }`}
             >
-              <div className="font-bold text-sm">Greedy</div>
+              <div className="font-bold text-sm">Algoritmos voraces (Greedy)</div>
               <p className="text-xs text-slate-500 mt-1 leading-snug">
-                Construye solución rápida mediante decisiones locales deterministas (MRV).
+                Construye solución rápida mediante decisiones locales deterministas (heurística MRV). Complejidad polinomial O(N log N + NK).
               </p>
             </div>
 
@@ -92,9 +92,9 @@ export default function PantallaEjecucion({
                   : "border-slate-200 hover:border-slate-300 bg-slate-50/50 text-slate-700"
               }`}
             >
-              <div className="font-bold text-sm">Backtracking</div>
+              <div className="font-bold text-sm">Algoritmo de Retroceso (Backtracking)</div>
               <p className="text-xs text-slate-500 mt-1 leading-snug">
-                Búsqueda exhaustiva con poda. Explora alternativas y retrocede al fallar.
+                Búsqueda sistemática en árbol de estados con poda de ramas inviables. Explora y retrocede. Complejidad exponencial O(K^N).
               </p>
             </div>
 
@@ -114,7 +114,7 @@ export default function PantallaEjecucion({
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-1 leading-snug">
-                Ejecuta ambos algoritmos sobre la misma entrada para habilitar la comparativa directa.
+                Ejecuta ambas estrategias sobre la misma entrada para contrastar empíricamente la complejidad y optimización.
               </p>
             </div>
           </div>
@@ -131,9 +131,9 @@ export default function PantallaEjecucion({
               onChange={(e) => setPasoCuadricula(Number(e.target.value))}
               className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-medium"
             >
-              <option value={15}>Cada 15 minutos</option>
-              <option value={30}>Cada 30 minutos (Estándar)</option>
-              <option value={60}>Cada 60 minutos</option>
+              <option value={60}>Cada 60 minutos (Estándar Universitario)</option>
+              <option value={120}>Cada 120 minutos (Bloques de 2h exactos)</option>
+              <option value={30}>Cada 30 minutos (Granular)</option>
             </select>
           </div>
 
@@ -166,7 +166,14 @@ export default function PantallaEjecucion({
           {cargando ? (
             <span>Calculando planificación y resolviendo restricciones...</span>
           ) : (
-            <span>Iniciar Planificación: {modo}</span>
+            <span>
+              Iniciar Planificación:{" "}
+              {modo === "GREEDY"
+                ? "Algoritmos voraces (Greedy)"
+                : modo === "BACKTRACKING"
+                ? "Algoritmo de Retroceso (Backtracking)"
+                : "Ambos Algoritmos"}
+            </span>
           )}
         </button>
       </div>
@@ -182,7 +189,13 @@ export default function PantallaEjecucion({
             <div className="space-y-3 mt-4 text-xs">
               <div className="flex justify-between items-center py-1">
                 <span className="text-slate-500 font-medium">Algoritmo:</span>
-                <span className="font-bold text-slate-800 text-sm">{resumenEjecucion.algoritmo}</span>
+                <span className="font-bold text-slate-800 text-sm">
+                  {resumenEjecucion.algoritmo === "GREEDY"
+                    ? "Algoritmos voraces (Greedy)"
+                    : resumenEjecucion.algoritmo === "BACKTRACKING"
+                    ? "Algoritmo de Retroceso (Backtracking)"
+                    : resumenEjecucion.algoritmo}
+                </span>
               </div>
 
               <div className="flex justify-between items-center py-1">

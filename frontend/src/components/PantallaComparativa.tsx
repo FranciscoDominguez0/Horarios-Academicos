@@ -18,7 +18,7 @@ export default function PantallaComparativa({
         <span className="text-4xl block">📊</span>
         <h3 className="text-lg font-bold text-slate-800">No hay datos de comparación disponibles</h3>
         <p className="text-sm text-slate-500 max-w-md mx-auto">
-          Ejecuta ambos algoritmos (Greedy y Backtracking) en la pantalla de{" "}
+          Ejecuta ambos algoritmos (Algoritmos voraces (Greedy) y Algoritmo de Retroceso (Backtracking)) en la pantalla de{" "}
           <span className="font-semibold text-slate-700">Ejecución de Algoritmos</span> para contrastar
           sus métricas empíricas y complejidad computacional.
         </p>
@@ -62,8 +62,8 @@ export default function PantallaComparativa({
           <thead className="bg-slate-50 text-slate-600 font-semibold text-xs border-b border-slate-200">
             <tr>
               <th className="py-3 px-4">Indicador</th>
-              <th className="py-3 px-4 font-bold text-amber-900 bg-amber-50/50">Greedy (Voraz)</th>
-              <th className="py-3 px-4 font-bold text-indigo-900 bg-indigo-50/50">Backtracking (Poda)</th>
+              <th className="py-3 px-4 font-bold text-amber-900 bg-amber-50/50">Algoritmos voraces (Greedy)</th>
+              <th className="py-3 px-4 font-bold text-indigo-900 bg-indigo-50/50">Algoritmo de Retroceso (Backtracking)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
@@ -88,8 +88,24 @@ export default function PantallaComparativa({
             </tr>
             <tr>
               <td className="py-3 px-4 font-semibold text-slate-800">Sesiones pendientes</td>
-              <td className="py-3 px-4 font-bold text-amber-600">{runA.sesionesPendientes}</td>
-              <td className="py-3 px-4 font-bold text-amber-600">{runB.sesionesPendientes}</td>
+              <td className="py-3 px-4">
+                {runA.sesionesPendientes > 0 ? (
+                  <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded font-bold">
+                    {runA.sesionesPendientes} no asignada(s)
+                  </span>
+                ) : (
+                  <span className="text-emerald-700 font-bold">0</span>
+                )}
+              </td>
+              <td className="py-3 px-4">
+                {runB.sesionesPendientes === 0 ? (
+                  <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold">
+                    0 pendientes (100% asignado)
+                  </span>
+                ) : (
+                  <span className="text-amber-700 font-bold">{runB.sesionesPendientes}</span>
+                )}
+              </td>
             </tr>
             <tr>
               <td className="py-3 px-4 font-semibold text-slate-800">Conflictos detectados</td>
@@ -121,14 +137,19 @@ export default function PantallaComparativa({
           <div className="flex justify-between items-center">
             <h4 className="font-bold text-slate-800 text-sm">Tiempo de Ejecución (ms)</h4>
             <span className="text-xs font-semibold px-2 py-0.5 bg-slate-100 text-slate-700 rounded">
-              {algoritmoMasRapido} es {razonVelocidad}x más rápido
+              {algoritmoMasRapido === "GREEDY"
+                ? "Algoritmos voraces (Greedy)"
+                : algoritmoMasRapido === "BACKTRACKING"
+                ? "Algoritmo de Retroceso (Backtracking)"
+                : algoritmoMasRapido}{" "}
+              es {razonVelocidad}x más rápido
             </span>
           </div>
 
           <div className="space-y-3 pt-2">
             <div>
               <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
-                <span>Greedy</span>
+                <span>Algoritmos voraces (Greedy)</span>
                 <span className="font-mono font-bold text-amber-700">{runA.duracionMs} ms</span>
               </div>
               <div className="w-full bg-slate-100 h-6 rounded-lg overflow-hidden">
@@ -143,7 +164,7 @@ export default function PantallaComparativa({
 
             <div>
               <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
-                <span>Backtracking</span>
+                <span>Algoritmo de Retroceso (Backtracking)</span>
                 <span className="font-mono font-bold text-indigo-700">{runB.duracionMs} ms</span>
               </div>
               <div className="w-full bg-slate-100 h-6 rounded-lg overflow-hidden">
@@ -162,13 +183,13 @@ export default function PantallaComparativa({
         <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
           <div className="flex justify-between items-center">
             <h4 className="font-bold text-slate-800 text-sm">Operaciones Evaluadas</h4>
-            <span className="text-xs text-slate-400">Verificaciones de conflicto</span>
+            <span className="text-xs text-slate-400">Verificaciones de restricciones</span>
           </div>
 
           <div className="space-y-3 pt-2">
             <div>
               <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
-                <span>Greedy</span>
+                <span>Algoritmos voraces (Greedy)</span>
                 <span className="font-mono font-bold text-amber-700">{runA.operaciones.toLocaleString()}</span>
               </div>
               <div className="w-full bg-slate-100 h-6 rounded-lg overflow-hidden">
@@ -183,7 +204,7 @@ export default function PantallaComparativa({
 
             <div>
               <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
-                <span>Backtracking</span>
+                <span>Algoritmo de Retroceso (Backtracking)</span>
                 <span className="font-mono font-bold text-indigo-700">{runB.operaciones.toLocaleString()}</span>
               </div>
               <div className="w-full bg-slate-100 h-6 rounded-lg overflow-hidden">
@@ -206,7 +227,7 @@ export default function PantallaComparativa({
           <h4 className="font-bold text-slate-800 text-sm border-b pb-2">Complejidad Teórica</h4>
           <div className="space-y-3 text-xs text-slate-700">
             <div className="p-3 bg-amber-50/50 rounded-xl border border-amber-100">
-              <span className="font-bold text-amber-950 block">Algoritmo Greedy</span>
+              <span className="font-bold text-amber-950 block">Algoritmos voraces (Greedy)</span>
               <p className="mt-1">
                 <span className="font-semibold">Temporal:</span>{" "}
                 <code className="font-mono bg-white px-1 py-0.5 rounded border border-amber-200 text-amber-800">
@@ -220,12 +241,12 @@ export default function PantallaComparativa({
                 </code>
               </p>
               <p className="text-[11px] text-slate-500 mt-1">
-                N = número de sesiones, K = candidatos por sesión. Muy rápido pero no garantiza completitud ni optimalidad.
+                N = sesiones a ubicar, K = franjas candidatas por sesión. Heurística voraz (MRV). Muy veloz pero no garantiza completitud ni optimalidad global ante restricciones acopladas.
               </p>
             </div>
 
             <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100">
-              <span className="font-bold text-indigo-950 block">Algoritmo Backtracking</span>
+              <span className="font-bold text-indigo-950 block">Algoritmo de Retroceso (Backtracking)</span>
               <p className="mt-1">
                 <span className="font-semibold">Temporal:</span>{" "}
                 <code className="font-mono bg-white px-1 py-0.5 rounded border border-indigo-200 text-indigo-800">
@@ -241,7 +262,7 @@ export default function PantallaComparativa({
                 (pila recursiva)
               </p>
               <p className="text-[11px] text-slate-500 mt-1">
-                Búsqueda exhaustiva con poda. Garantiza hallar solución si existe o demostrar ausencia de solución.
+                Búsqueda exhaustiva con poda. Explora el árbol combinatorio retrocediendo al hallar conflictos. Garantiza encontrar solución si existe o demostrar infactibilidad.
               </p>
             </div>
           </div>
@@ -261,10 +282,8 @@ export default function PantallaComparativa({
               <strong className="text-slate-800">Factibilidad:</strong> {resumen.factibilidad}
             </p>
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-700 text-[11px] mt-2">
-              <strong className="block text-slate-800 mb-1">Conclusión Académica:</strong>
-              En instancias con suficiente holgura, Greedy encuentra una solución factible en una fracción de tiempo.
-              Sin embargo, en instancias altamente restringidas con cuello de botella en docentes o aulas,
-              Backtracking demuestra su superioridad al explorar caminos alternativos mediante retroceso seguro.
+              <strong className="block text-slate-800 mb-1">Conclusión de Optimización:</strong>
+              En instancias con holgura horaria, los <strong className="font-semibold">Algoritmos voraces (Greedy)</strong> entregan soluciones válidas en milisegundos con orden O(NK). Sin embargo, en instancias con cuellos de botella severos de disponibilidad docente, el <strong className="font-semibold">Algoritmo de Retroceso (Backtracking)</strong> demuestra su potencia resolviendo el CSP al podar ramas inviables y retroceder sin quedar atrapado en óptimos locales.
             </div>
           </div>
         </div>

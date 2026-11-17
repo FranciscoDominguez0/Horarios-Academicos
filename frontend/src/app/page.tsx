@@ -55,6 +55,38 @@ export default function PaginaPrincipal() {
               const listaAsig = await respAsig.json();
               setAsignaciones(listaAsig);
             }
+
+            // 2.1 Cargar ejecuciones previas del período para mostrar resultados de inmediato
+            try {
+              const respRuns = await fetch(`/api/scheduling/periods/${activo.id}/runs`);
+              if (respRuns.ok) {
+                const listaRuns = await respRuns.json();
+                const ultGreedy = listaRuns.find((r: any) => r.algoritmo === "GREEDY");
+                const ultBacktrack = listaRuns.find((r: any) => r.algoritmo === "BACKTRACKING");
+
+                if (ultGreedy) {
+                  setIdGreedy(ultGreedy.id);
+                  setInfoGreedy(ultGreedy);
+                  const sResp = await fetch(`/api/scheduling/runs/${ultGreedy.id}/sessions`);
+                  if (sResp.ok) setSesionesGreedy(await sResp.json());
+                }
+                if (ultBacktrack) {
+                  setIdBacktracking(ultBacktrack.id);
+                  setInfoBacktracking(ultBacktrack);
+                  const sResp = await fetch(`/api/scheduling/runs/${ultBacktrack.id}/sessions`);
+                  if (sResp.ok) setSesionesBacktracking(await sResp.json());
+                }
+
+                if (ultGreedy && ultBacktrack) {
+                  const compResp = await fetch(`/api/analytics/compare?runA=${ultGreedy.id}&runB=${ultBacktrack.id}`);
+                  if (compResp.ok) {
+                    setDatosComparativa(await compResp.json());
+                  }
+                }
+              }
+            } catch (errRuns) {
+              console.warn("No se pudieron pre-cargar ejecuciones previas:", errRuns);
+            }
           }
         }
 

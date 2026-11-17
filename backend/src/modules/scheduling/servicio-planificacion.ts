@@ -53,6 +53,7 @@ export async function guardarResultadoEnBd(
           JSON.stringify({
             metricas: resultado.metricas,
             conflictos: resultado.validacion.conflictos,
+            sesionesPendientes: resultado.sesionesPendientes,
           })
         ),
       },

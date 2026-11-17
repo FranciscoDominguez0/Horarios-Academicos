@@ -128,9 +128,10 @@ export default function PantallaDatosEntrada({
       <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 text-xs text-indigo-900 flex items-start gap-3">
         <span className="text-base">📌</span>
         <div>
-          <span className="font-bold">Equivalencia estricta de entradas:</span> Ambos algoritmos
-          (Greedy y Backtracking) reciben exactamente este mismo conjunto de datos inmutables y
-          restricciones horarias. Al agregar una nueva asignación, podrás ver cómo compiten por las franjas y dónde la ubica cada uno.
+          <span className="font-bold">Definición de Instancia de Optimización (CSP):</span> Esta pantalla define
+          las variables a planificar (sesiones académicas), sus dominios de tiempo y las restricciones duras
+          (evitar cruces de docente, grupos y respetar disponibilidad). Ambos algoritmos (<strong className="font-semibold">Algoritmos voraces (Greedy)</strong> y <strong className="font-semibold">Algoritmo de Retroceso (Backtracking)</strong>)
+          reciben una captura idéntica e inmutable para garantizar la validez científica de la comparación de complejidad.
         </div>
       </div>
 

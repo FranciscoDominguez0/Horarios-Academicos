@@ -100,7 +100,7 @@ export default function PantallaDashboard({
           <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <span className="font-bold text-slate-800">Algoritmo Greedy</span>
+                <span className="font-bold text-slate-800">Algoritmos voraces (Greedy)</span>
                 <span className="text-xs font-semibold px-2 py-0.5 bg-amber-50 text-amber-700 rounded-md">
                   Decisiones Locales
                 </span>
@@ -134,7 +134,7 @@ export default function PantallaDashboard({
               onClick={() => onNavegar("ejecucion")}
               className="mt-4 w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition-all"
             >
-              Ejecutar Greedy
+              Ejecutar Algoritmos voraces (Greedy)
             </button>
           </div>
 
@@ -142,7 +142,7 @@ export default function PantallaDashboard({
           <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <span className="font-bold text-slate-800">Algoritmo Backtracking</span>
+                <span className="font-bold text-slate-800">Algoritmo de Retroceso (Backtracking)</span>
                 <span className="text-xs font-semibold px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md">
                   Búsqueda con Poda
                 </span>
@@ -180,7 +180,7 @@ export default function PantallaDashboard({
               onClick={() => onNavegar("ejecucion")}
               className="mt-4 w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition-all"
             >
-              Ejecutar Backtracking
+              Ejecutar Algoritmo de Retroceso (Backtracking)
             </button>
           </div>
         </div>
