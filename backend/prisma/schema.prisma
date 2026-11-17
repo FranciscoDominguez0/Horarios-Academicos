@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model academic_periods {
+  id                 Int                     @id @default(autoincrement())
+  name               String                  @db.VarChar(100)
+  start_date         DateTime                @db.Date
+  end_date           DateTime                @db.Date
+  status             academic_periods_status @default(INACTIVE)
+  created_at         DateTime?               @default(now()) @db.Timestamp(0)
+  course_assignments course_assignments[]
+  schedule_runs      schedule_runs[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model course_assignments {
+  id                   Int                    @id @default(autoincrement())
+  subject_id           Int
+  teacher_id           Int
+  group_id             Int
+  period_id            Int
+  weekly_minutes       Int
+  active               Boolean                @default(true)
+  created_at           DateTime?              @default(now()) @db.Timestamp(0)
+  student_groups       student_groups         @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_assignment_group")
+  academic_periods     academic_periods       @relation(fields: [period_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_assignment_period")
+  subjects             subjects               @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_assignment_subject")
+  teachers             teachers               @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_assignment_teacher")
+  session_requirements session_requirements[]
+
+  @@unique([subject_id, teacher_id, group_id, period_id], map: "uq_course_assignment")
+  @@index([group_id], map: "idx_assignment_group")
+  @@index([period_id], map: "idx_assignment_period")
+  @@index([teacher_id], map: "idx_assignment_teacher")
+}
+
+model schedule_runs {
+  id                  BigInt                  @id @default(autoincrement())
+  period_id           Int
+  algorithm           schedule_runs_algorithm
+  status              schedule_runs_status    @default(PENDING)
+  started_at          DateTime?               @db.DateTime(0)
+  finished_at         DateTime?               @db.DateTime(0)
+  duration_ms         Decimal?                @db.Decimal(12, 3)
+  operations          BigInt?                 @default(0)
+  nodes_visited       BigInt?                 @default(0)
+  backtracks          BigInt?                 @default(0)
+  assigned_sessions   Int?                    @default(0)
+  unassigned_sessions Int?                    @default(0)
+  conflicts_found     Int?                    @default(0)
+  quality_score       Decimal?                @db.Decimal(8, 2)
+  input_snapshot      Json?
+  metrics_json        Json?
+  created_at          DateTime?               @default(now()) @db.Timestamp(0)
+  academic_periods    academic_periods        @relation(fields: [period_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_run_period")
+  schedule_sessions   schedule_sessions[]
+
+  @@index([algorithm], map: "idx_run_algorithm")
+  @@index([period_id], map: "idx_run_period")
+  @@index([status], map: "idx_run_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model schedule_sessions {
+  id                   BigInt               @id @default(autoincrement())
+  run_id               BigInt
+  requirement_id       Int
+  session_number       Int
+  day_of_week          Int                  @db.TinyInt
+  start_minute         Int                  @db.SmallInt
+  end_minute           Int                  @db.SmallInt
+  created_at           DateTime?            @default(now()) @db.Timestamp(0)
+  session_requirements session_requirements @relation(fields: [requirement_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_session_requirement")
+  schedule_runs        schedule_runs        @relation(fields: [run_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_session_run")
+
+  @@unique([run_id, requirement_id, session_number], map: "uq_run_requirement_session")
+  @@index([requirement_id], map: "idx_schedule_requirement")
+  @@index([run_id, day_of_week], map: "idx_schedule_run_day")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model session_requirements {
+  id                 Int                 @id @default(autoincrement())
+  assignment_id      Int
+  duration_minutes   Int
+  quantity           Int
+  created_at         DateTime?           @default(now()) @db.Timestamp(0)
+  schedule_sessions  schedule_sessions[]
+  course_assignments course_assignments  @relation(fields: [assignment_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_requirement_assignment")
+
+  @@index([assignment_id], map: "idx_requirement_assignment")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model student_groups {
+  id                 Int                  @id @default(autoincrement())
+  code               String               @unique(map: "code") @db.VarChar(30)
+  name               String               @db.VarChar(100)
+  semester_number    Int?                 @db.TinyInt
+  student_count      Int?                 @default(0)
+  active             Boolean              @default(true)
+  created_at         DateTime?            @default(now()) @db.Timestamp(0)
+  course_assignments course_assignments[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model subjects {
+  id                 Int                  @id @default(autoincrement())
+  code               String               @unique(map: "code") @db.VarChar(30)
+  name               String               @db.VarChar(150)
+  description        String?              @db.Text
+  credits            Int?                 @db.TinyInt
+  active             Boolean              @default(true)
+  created_at         DateTime?            @default(now()) @db.Timestamp(0)
+  course_assignments course_assignments[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model teacher_availability {
+  id           Int       @id @default(autoincrement())
+  teacher_id   Int
+  day_of_week  Int       @db.TinyInt
+  start_minute Int       @db.SmallInt
+  end_minute   Int       @db.SmallInt
+  created_at   DateTime? @default(now()) @db.Timestamp(0)
+  teachers     teachers  @relation(fields: [teacher_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_availability_teacher")
+
+  @@index([teacher_id, day_of_week], map: "idx_availability_teacher_day")
+}
+
+model teachers {
+  id                   Int                    @id @default(autoincrement())
+  first_name           String                 @db.VarChar(100)
+  last_name            String                 @db.VarChar(100)
+  email                String?                @unique(map: "email") @db.VarChar(150)
+  phone                String?                @db.VarChar(30)
+  active               Boolean                @default(true)
+  created_at           DateTime?              @default(now()) @db.Timestamp(0)
+  course_assignments   course_assignments[]
+  teacher_availability teacher_availability[]
+}
+
+enum schedule_runs_algorithm {
+  GREEDY
+  BACKTRACKING
+}
+
+enum schedule_runs_status {
+  PENDING
+  RUNNING
+  COMPLETED
+  NO_SOLUTION
+  LIMIT_REACHED
+  ERROR
+}
+
+enum academic_periods_status {
+  ACTIVE
+  INACTIVE
+  CLOSED
+}
