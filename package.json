@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "test": "vitest"
+    "dev": "npm --prefix backend run dev",
+    "build": "npm --prefix backend run build",
+    "test": "npm --prefix backend run test"
   },
   "keywords": [],
   "author": "",
