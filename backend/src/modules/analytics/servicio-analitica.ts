@@ -91,8 +91,8 @@ export function construirComparacion(
         algoritmoMasRapido === "EMPATE"
           ? "Ambos algoritmos registraron el mismo tiempo de respuesta."
           : `${algoritmoMasRapido} fue ${razonVelocidad}x más rápido en esta instancia.`,
-      completitud: `Run A asignó ${runA.sesionesAsignadas} sesiones (pendientes: ${runA.sesionesPendientes}). Run B asignó ${runB.sesionesAsignadas} sesiones (pendientes: ${runB.sesionesPendientes}).`,
-      factibilidad: `Conflictos duros detectados: Run A = ${runA.conflictos}, Run B = ${runB.conflictos}.`,
+      completitud: `${runA.algoritmo} asignó ${runA.sesionesAsignadas} sesiones (pendientes: ${runA.sesionesPendientes}). ${runB.algoritmo} asignó ${runB.sesionesAsignadas} sesiones (pendientes: ${runB.sesionesPendientes}).`,
+      factibilidad: `Conflictos duros detectados: ${runA.algoritmo} = ${runA.conflictos}, ${runB.algoritmo} = ${runB.conflictos}.`,
     },
   };
 }
