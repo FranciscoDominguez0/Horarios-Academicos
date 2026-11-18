@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { IconoProfesor, IconoUbicacion, IconoReloj, IconoAlerta, IconoCheck, IconoPuntos } from "./Iconos";
 
 export interface SesionCalendario {
   id: string;
@@ -31,46 +32,150 @@ const DIAS = [
 function formatearMinutos(minutos: number): string {
   const h = Math.floor(minutos / 60);
   const m = minutos % 60;
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")} ${ampm}`;
+}
+
+function formatearHoraCorta(minutos: number): string {
+  const h = Math.floor(minutos / 60);
+  const m = minutos % 60;
   return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
 }
 
-export const COLORES_MATERIAS: Record<string, string> = {
+export const ESTILOS_MATERIAS: Record<
+  string,
+  { bg: string; border: string; text: string; badge: string; dot: string }
+> = {
   // 1° Año
-  "Algoritmos y Programación I": "bg-blue-600 border-blue-700 text-white",
-  "Cálculo Diferencial": "bg-emerald-600 border-emerald-700 text-white",
-  "Álgebra Lineal": "bg-purple-600 border-purple-700 text-white",
-  "Introducción a la Informática": "bg-rose-600 border-rose-700 text-white",
+  "Algoritmos y Programación I": {
+    bg: "bg-[#ece8fd]",
+    border: "border-[#ded5f8]",
+    text: "text-purple-950",
+    badge: "bg-white/90 text-purple-900",
+    dot: "bg-purple-500",
+  },
+  "Cálculo Diferencial e Integral": {
+    bg: "bg-[#ddf7e5]",
+    border: "border-[#c2ecd0]",
+    text: "text-emerald-950",
+    badge: "bg-white/90 text-emerald-900",
+    dot: "bg-emerald-500",
+  },
+  "Álgebra Lineal y Geometría": {
+    bg: "bg-[#e0f4fc]",
+    border: "border-[#c6e7f7]",
+    text: "text-sky-950",
+    badge: "bg-white/90 text-sky-900",
+    dot: "bg-sky-500",
+  },
+  "Introducción a la Informática": {
+    bg: "bg-[#fde7df]",
+    border: "border-[#f6d0c0]",
+    text: "text-orange-950",
+    badge: "bg-white/90 text-orange-900",
+    dot: "bg-orange-500",
+  },
+  "Física Mecánica y Laboratorio": {
+    bg: "bg-[#fef3d6]",
+    border: "border-[#f7e3ad]",
+    text: "text-amber-950",
+    badge: "bg-white/90 text-amber-900",
+    dot: "bg-amber-500",
+  },
 
   // 2° Año
-  "Estructuras de Datos y Algoritmos II": "bg-sky-600 border-sky-700 text-white",
-  "Cálculo Integral y Vectorial": "bg-teal-600 border-teal-700 text-white",
-  "Bases de Datos I": "bg-amber-600 border-amber-700 text-white",
-  "Arquitectura de Computadores": "bg-indigo-600 border-indigo-700 text-white",
+  "Estructuras de Datos y Algoritmos II": {
+    bg: "bg-[#e2ecfe]",
+    border: "border-[#ccdeff]",
+    text: "text-blue-950",
+    badge: "bg-white/90 text-blue-900",
+    dot: "bg-blue-600",
+  },
+  "Probabilidad y Estadística Aplicada": {
+    bg: "bg-[#dcfce7]",
+    border: "border-[#bbf7d0]",
+    text: "text-teal-950",
+    badge: "bg-white/90 text-teal-900",
+    dot: "bg-teal-500",
+  },
+  "Bases de Datos I": {
+    bg: "bg-[#ffedd5]",
+    border: "border-[#fed7aa]",
+    text: "text-orange-950",
+    badge: "bg-white/90 text-orange-900",
+    dot: "bg-orange-500",
+  },
+  "Arquitectura de Computadores": {
+    bg: "bg-[#ede9fe]",
+    border: "border-[#ddd6fe]",
+    text: "text-violet-950",
+    badge: "bg-white/90 text-violet-900",
+    dot: "bg-violet-500",
+  },
+  "Programación Orientada a Objetos": {
+    bg: "bg-[#fce7f3]",
+    border: "border-[#fbcfe8]",
+    text: "text-pink-950",
+    badge: "bg-white/90 text-pink-900",
+    dot: "bg-pink-500",
+  },
 
   // 3° Año
-  "Sistemas Operativos": "bg-cyan-700 border-cyan-800 text-white",
-  "Bases de Datos Avanzadas": "bg-orange-600 border-orange-700 text-white",
-  "Redes y Telecomunicaciones": "bg-violet-600 border-violet-700 text-white",
-  "Ingeniería de Software": "bg-fuchsia-600 border-fuchsia-700 text-white",
+  "Redes y Telecomunicaciones": {
+    bg: "bg-[#ece8fd]",
+    border: "border-[#ded5f8]",
+    text: "text-purple-950",
+    badge: "bg-white/90 text-purple-900",
+    dot: "bg-purple-500",
+  },
+  "Ingeniería de Software": {
+    bg: "bg-[#fce7f3]",
+    border: "border-[#fbcfe8]",
+    text: "text-pink-950",
+    badge: "bg-white/90 text-pink-900",
+    dot: "bg-pink-500",
+  },
+  "Sistemas Operativos": {
+    bg: "bg-[#e0f4fc]",
+    border: "border-[#c6e7f7]",
+    text: "text-sky-950",
+    badge: "bg-white/90 text-sky-900",
+    dot: "bg-sky-500",
+  },
+  "Bases de Datos Avanzadas": {
+    bg: "bg-[#fef3d6]",
+    border: "border-[#f7e3ad]",
+    text: "text-amber-950",
+    badge: "bg-white/90 text-amber-900",
+    dot: "bg-amber-500",
+  },
+  "Inteligencia Artificial": {
+    bg: "bg-[#ddf7e5]",
+    border: "border-[#c2ecd0]",
+    text: "text-emerald-950",
+    badge: "bg-white/90 text-emerald-900",
+    dot: "bg-emerald-500",
+  },
 };
 
+export function obtenerEstiloMateria(asignatura: string) {
+  if (ESTILOS_MATERIAS[asignatura]) {
+    return ESTILOS_MATERIAS[asignatura];
+  }
+  return {
+    bg: "bg-slate-100",
+    border: "border-slate-200",
+    text: "text-slate-900",
+    badge: "bg-white text-slate-800",
+    dot: "bg-slate-400",
+  };
+}
+
+// Compatibilidad
 export function obtenerColorMateria(asignatura: string): string {
-  if (COLORES_MATERIAS[asignatura]) {
-    return COLORES_MATERIAS[asignatura];
-  }
-  const paleta = [
-    "bg-sky-600 border-sky-700 text-white",
-    "bg-violet-600 border-violet-700 text-white",
-    "bg-pink-600 border-pink-700 text-white",
-    "bg-teal-600 border-teal-700 text-white",
-    "bg-orange-600 border-orange-700 text-white",
-    "bg-lime-600 border-lime-700 text-white",
-  ];
-  let hash = 0;
-  for (let i = 0; i < asignatura.length; i++) {
-    hash = (hash + asignatura.charCodeAt(i)) % paleta.length;
-  }
-  return paleta[hash];
+  const estilo = obtenerEstiloMateria(asignatura);
+  return `${estilo.bg} ${estilo.border} ${estilo.text}`;
 }
 
 interface EventoPosicionado extends SesionCalendario {
@@ -81,21 +186,14 @@ interface EventoPosicionado extends SesionCalendario {
   tieneConflictoSalon: boolean;
 }
 
-/**
- * Algoritmo de diseño de eventos simultáneos (sub-columnas dinámicas sin solapamiento).
- * Permite que todas las clases que ocurren a la misma hora en distintos grupos
- * se muestren una al lado de la otra de forma visible y legible.
- */
 function calcularDisposicionEventos(sesiones: SesionCalendario[]): EventoPosicionado[] {
   if (sesiones.length === 0) return [];
 
-  // Ordenar por hora de inicio y luego por duración
   const ordenadas = [...sesiones].sort((a, b) => {
     if (a.inicioMinuto !== b.inicioMinuto) return a.inicioMinuto - b.inicioMinuto;
     return (b.finMinuto - b.inicioMinuto) - (a.finMinuto - a.inicioMinuto);
   });
 
-  // Agrupar en clusters de solapamiento
   const clusters: SesionCalendario[][] = [];
   let clusterActual: SesionCalendario[] = [];
   let clusterFinMinuto = -1;
@@ -174,58 +272,68 @@ function calcularDisposicionEventos(sesiones: SesionCalendario[]): EventoPosicio
 
 export default function CalendarioSemanal({
   sesiones,
-  jornadaInicioMinuto = 420, // 07:00
+  jornadaInicioMinuto = 480, // 08:00
   jornadaFinMinuto = 1080, // 18:00
 }: PropiedadesCalendario) {
   const duracionTotalJornada = jornadaFinMinuto - jornadaInicioMinuto;
 
-  // Generar marcas de hora para la regla lateral (07:00, 08:00 ... 18:00)
   const horasGuia: number[] = [];
   for (let min = jornadaInicioMinuto; min <= jornadaFinMinuto; min += 60) {
     horasGuia.push(min);
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-      <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div>
-          <h3 className="font-semibold text-slate-800 text-lg">Calendario Semanal — Distribución en 3 Salones y 3 Años</h3>
-          <p className="text-xs text-slate-500">
-            Cada clase se asigna a uno de los 3 salones libres (Salón 101, 102 y 103). Un profesor o grupo nunca está en dos salones simultáneos.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-full">
-            {sesiones.length} sesiones visibles
-          </span>
-        </div>
-      </div>
-
-      {/* Cabecera de Días con columna para horas */}
-      <div className="grid grid-cols-[60px_repeat(5,1fr)] border-b border-slate-200 bg-slate-50 text-center font-medium text-xs text-slate-600">
-        <div className="py-2.5 border-r border-slate-200 text-slate-400 font-mono text-[10px]">
+    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+      {/* Cabecera del Calendario */}
+      <div className="grid grid-cols-[70px_repeat(5,1fr)] border-b border-slate-200 bg-white sticky top-0 z-10">
+        <div className="py-3 border-r border-slate-100 text-center text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
           Hora
         </div>
         {DIAS.map((dia) => (
-          <div key={dia.id} className="py-2.5 border-r last:border-r-0 border-slate-200">
+          <div
+            key={dia.id}
+            className="py-3 border-r last:border-r-0 border-slate-100 text-center text-xs font-bold text-slate-700"
+          >
             {dia.nombre}
           </div>
         ))}
       </div>
 
-      {/* Cuerpo del Calendario con Cuadrícula */}
-      <div className="grid grid-cols-[60px_repeat(5,1fr)] relative h-[650px] bg-slate-50/20 overflow-y-auto">
-        {/* Columna Lateral de Horas */}
-        <div className="relative border-r border-slate-200 select-none bg-slate-50/50">
+      {/* Contenedor Cuadrícula de Tiempo */}
+      <div className="grid grid-cols-[70px_repeat(5,1fr)] relative h-[680px] bg-white overflow-y-auto">
+        {/* Línea de Hora Actual (como en la referencia) */}
+        {(() => {
+          const horaActualMinutos = 600; // 10:00 AM
+          if (horaActualMinutos >= jornadaInicioMinuto && horaActualMinutos <= jornadaFinMinuto) {
+            const top = ((horaActualMinutos - jornadaInicioMinuto) / duracionTotalJornada) * 100;
+            return (
+              <div
+                style={{ top: `${top}%` }}
+                className="absolute left-0 right-0 z-30 pointer-events-none flex items-center -translate-y-1/2"
+              >
+                <div className="w-[70px] flex justify-end pr-1">
+                  <span className="bg-slate-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                    10:00
+                  </span>
+                </div>
+                <div className="flex-1 border-t-2 border-slate-900" />
+              </div>
+            );
+          }
+          return null;
+        })()}
+
+        {/* Regla de Horas Lateral */}
+        <div className="relative border-r border-slate-100 select-none bg-slate-50/30">
           {horasGuia.map((min) => {
             const top = ((min - jornadaInicioMinuto) / duracionTotalJornada) * 100;
             return (
               <div
                 key={min}
                 style={{ top: `${top}%` }}
-                className="absolute left-0 right-1 text-right text-[10px] font-mono text-slate-400 -translate-y-1/2 pr-1"
+                className="absolute left-0 right-2 text-right text-[11px] font-medium text-slate-400 -translate-y-1/2 pr-1"
               >
-                {formatearMinutos(min)}
+                {formatearHoraCorta(min)}
               </div>
             );
           })}
@@ -239,34 +347,36 @@ export default function CalendarioSemanal({
           return (
             <div
               key={dia.id}
-              className="relative border-r last:border-r-0 border-slate-200 h-full"
+              className="relative border-r last:border-r-0 border-slate-100 h-full"
             >
-              {/* Líneas Guía Horizontales de Cada Hora */}
+              {/* Líneas Horizontales Discretas para Cada Hora */}
               {horasGuia.map((min) => {
                 const top = ((min - jornadaInicioMinuto) / duracionTotalJornada) * 100;
                 return (
                   <div
                     key={min}
                     style={{ top: `${top}%` }}
-                    className="absolute left-0 right-0 border-b border-dashed border-slate-200/80 pointer-events-none"
+                    className="absolute left-0 right-0 border-b border-slate-100/90 pointer-events-none"
                   />
                 );
               })}
 
-              {/* Tarjetas de Sesión Posicionadas Dinámicamente */}
+              {/* Tarjetas de Clases */}
               {eventosPosicionados.map((item) => {
                 const topPorcentaje =
                   ((item.inicioMinuto - jornadaInicioMinuto) / duracionTotalJornada) * 100;
                 const alturaPorcentaje =
                   ((item.finMinuto - item.inicioMinuto) / duracionTotalJornada) * 100;
 
-                const anchoPorcentaje = 98 / item.totalColumnas;
-                const leftPorcentaje = 1 + item.columna * anchoPorcentaje;
+                const anchoPorcentaje = 97 / item.totalColumnas;
+                const leftPorcentaje = 1.5 + item.columna * anchoPorcentaje;
 
-                const tieneConflicto = item.tieneConflictoDocente || item.tieneConflictoGrupo || item.tieneConflictoSalon;
-                const colorClase = tieneConflicto
-                  ? "bg-rose-700 border-rose-900 text-white shadow-md ring-2 ring-rose-400"
-                  : obtenerColorMateria(item.asignatura);
+                const tieneConflicto =
+                  item.tieneConflictoDocente ||
+                  item.tieneConflictoGrupo ||
+                  item.tieneConflictoSalon;
+
+                const estilo = obtenerEstiloMateria(item.asignatura);
 
                 return (
                   <div
@@ -277,34 +387,56 @@ export default function CalendarioSemanal({
                       left: `${leftPorcentaje}%`,
                       width: `${anchoPorcentaje}%`,
                     }}
-                    className={`absolute rounded-xl p-2 shadow-sm border flex flex-col justify-between overflow-hidden text-xs transition-all hover:z-20 hover:scale-[1.01] hover:shadow-lg ${colorClase}`}
+                    className={`absolute rounded-2xl p-2.5 shadow-xs border transition-all hover:shadow-md hover:z-20 flex flex-col justify-between overflow-hidden text-xs ${
+                      tieneConflicto
+                        ? "bg-rose-50 border-rose-300 text-rose-950"
+                        : `${estilo.bg} ${estilo.border} ${estilo.text}`
+                    }`}
                   >
                     <div>
-                      {tieneConflicto && (
-                        <div className="bg-rose-950/90 text-rose-200 text-[9px] font-black uppercase px-1.5 py-0.5 rounded mb-1 truncate">
-                          ⚠️ {item.tieneConflictoDocente ? "Choque Docente" : item.tieneConflictoSalon ? "Choque Salón" : "Choque Grupo"}
+                      {tieneConflicto ? (
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-rose-700 mb-1">
+                          <IconoAlerta className="w-3 h-3 shrink-0" />
+                          <span className="truncate">Conflicto detectado</span>
                         </div>
-                      )}
-                      <p className="font-extrabold truncate text-[11px] leading-tight">
-                        {item.asignatura}
-                      </p>
-                      <p className="text-[10px] opacity-90 truncate mt-0.5 flex items-center gap-1">
-                        <span>👨‍🏫</span> {item.docente}
-                      </p>
+                      ) : null}
+
+                      {/* Fila Superior: Título y Menú 3 puntos */}
+                      <div className="flex items-start justify-between gap-1 mb-1">
+                        <h4 className="font-semibold text-slate-900 text-xs leading-snug line-clamp-2">
+                          {item.asignatura}
+                        </h4>
+                        <button className="text-slate-400 hover:text-slate-600 p-0.5 rounded shrink-0">
+                          <IconoPuntos className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Fila Horario y Profesor */}
+                      <div className="text-[11px] text-slate-600 font-medium space-y-0.5">
+                        <div className="flex items-center gap-1 font-mono text-[10px] text-slate-500">
+                          <IconoReloj className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                          <span>
+                            {formatearHoraCorta(item.inicioMinuto)} - {formatearHoraCorta(item.finMinuto)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 truncate text-slate-700">
+                          <IconoProfesor className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                          <span className="truncate">{item.docente.split(" (")[0]}</span>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="space-y-0.5 pt-1 border-t border-white/20 text-[9px] opacity-95 font-mono">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold bg-black/25 px-1 py-0.5 rounded truncate">
-                          📍 {item.salon || "Salón"}
-                        </span>
-                        <span className="bg-black/25 px-1 py-0.5 rounded truncate">
-                          🎓 {item.grupo?.split(" - ")[0] || item.grupo}
-                        </span>
-                      </div>
-                      <div className="text-right font-bold">
-                        🕒 {formatearMinutos(item.inicioMinuto)} - {formatearMinutos(item.finMinuto)}
-                      </div>
+                    {/* Fila Inferior: Badges Blancos estilo Dashboard */}
+                    <div className="pt-1.5 flex items-center justify-between gap-1 flex-wrap">
+                      <span className="inline-flex items-center gap-1 bg-white/95 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-2xs border border-white/80">
+                        <IconoCheck className="w-2.5 h-2.5 text-emerald-600" />
+                        <span>Confirmado</span>
+                      </span>
+
+                      <span className="inline-flex items-center gap-1 bg-white/95 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-2xs border border-slate-200/60">
+                        <IconoUbicacion className="w-2.5 h-2.5 text-slate-400" />
+                        <span>{item.salon || "Salón"}</span>
+                      </span>
                     </div>
                   </div>
                 );

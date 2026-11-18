@@ -2,6 +2,7 @@
 
 import React from "react";
 import { MetricasComparativa } from "./ComparativaAlgoritmos";
+import { IconoComparativa, IconoCheck, IconoAlerta } from "./Iconos";
 
 interface PropiedadesComparativa {
   datos: MetricasComparativa | null;
@@ -14,19 +15,19 @@ export default function PantallaComparativa({
 }: PropiedadesComparativa) {
   if (!datos) {
     return (
-      <div className="bg-white rounded-2xl p-12 border border-slate-200 text-center space-y-3">
-        <span className="text-4xl block">📊</span>
-        <h3 className="text-lg font-bold text-slate-800">No hay datos de comparación disponibles</h3>
-        <p className="text-sm text-slate-500 max-w-md mx-auto">
-          Ejecuta ambos algoritmos (Algoritmos voraces (Greedy) y Algoritmo de Retroceso (Backtracking)) en la pantalla de{" "}
-          <span className="font-semibold text-slate-700">Ejecución de Algoritmos</span> para contrastar
-          sus métricas empíricas y complejidad computacional.
+      <div className="bg-white rounded-xl p-12 border border-slate-200 text-center space-y-3">
+        <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-500 mx-auto flex items-center justify-center">
+          <IconoComparativa className="w-6 h-6" />
+        </div>
+        <h3 className="text-base font-bold text-slate-900">No hay datos de comparación disponibles</h3>
+        <p className="text-xs text-slate-500 max-w-sm mx-auto">
+          Ejecuta ambos algoritmos (Greedy y Backtracking) en la pantalla de Ejecución de Algoritmos para contrastar sus métricas.
         </p>
       </div>
     );
   }
 
-  const { runA, runB, resumen, algoritmoMasRapido, razonVelocidad } = datos;
+  const { runA, runB, resumen, algoritmoMasRapido } = datos;
 
   // Cálculos para las barras gráficas comparativas
   const maxTiempo = Math.max(runA.duracionMs, runB.duracionMs, 1);
@@ -38,69 +39,70 @@ export default function PantallaComparativa({
   const porcentajeOpsB = Math.max(8, (runB.operaciones / maxOperaciones) * 100);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Cabecera del Análisis */}
-      <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl p-6 shadow-sm border border-slate-800">
-        <span className="text-xs uppercase font-bold tracking-wider bg-indigo-500/20 text-indigo-300 px-2.5 py-0.5 rounded">
-          Propósito Académico Central
-        </span>
-        <h2 className="text-xl font-bold mt-2">Comparativa y Análisis de Complejidad Computacional</h2>
-        <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-          Medición rigurosa de tiempo, operaciones y calidad de solución obtenidas mediante ejecuciones reales
-          con idénticas entradas y restricciones obligatorias.
-        </p>
+      <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+            Análisis Experimental
+          </span>
+          <h2 className="text-base font-bold text-slate-900 mt-1">Comparativa y Complejidad Computacional</h2>
+          <p className="text-xs text-slate-500">
+            Medición empírica de tiempo, operaciones y calidad de solución con entradas idénticas.
+          </p>
+        </div>
       </div>
 
-      {/* Tabla Comparativa Formal Requerida */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="font-bold text-slate-800 text-sm">Tabla Comparativa Experimental</h3>
-          <span className="text-xs text-slate-400 font-mono">Snapshot idéntico</span>
+      {/* Tabla Comparativa Formal */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div className="p-3.5 border-b border-slate-100 flex items-center justify-between">
+          <h3 className="font-bold text-slate-900 text-xs">Resultados Experimentales Medidos</h3>
+          <span className="text-[11px] text-slate-400 font-mono">Entrada idéntica</span>
         </div>
 
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-600 font-semibold text-xs border-b border-slate-200">
+        <table className="w-full text-left text-xs">
+          <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200/70">
             <tr>
-              <th className="py-3 px-4">Indicador</th>
-              <th className="py-3 px-4 font-bold text-amber-900 bg-amber-50/50">Algoritmos voraces (Greedy)</th>
-              <th className="py-3 px-4 font-bold text-indigo-900 bg-indigo-50/50">Algoritmo de Retroceso (Backtracking)</th>
+              <th className="py-2.5 px-4">Indicador</th>
+              <th className="py-2.5 px-4 font-bold text-slate-900">Algoritmos voraces (Greedy)</th>
+              <th className="py-2.5 px-4 font-bold text-slate-900">Algoritmo de Retroceso (Backtracking)</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
+          <tbody className="divide-y divide-slate-100 text-slate-700">
             <tr>
-              <td className="py-3 px-4 font-semibold text-slate-800">Tiempo de ejecución</td>
-              <td className="py-3 px-4 font-mono font-bold text-amber-700">{runA.duracionMs} ms</td>
-              <td className="py-3 px-4 font-mono font-bold text-indigo-700">{runB.duracionMs} ms</td>
+              <td className="py-2.5 px-4 font-medium text-slate-900">Tiempo de ejecución</td>
+              <td className="py-2.5 px-4 font-mono font-bold text-slate-800">{runA.duracionMs} ms</td>
+              <td className="py-2.5 px-4 font-mono font-bold text-indigo-700">{runB.duracionMs} ms</td>
             </tr>
             <tr>
-              <td className="py-3 px-4 font-semibold text-slate-800">Operaciones realizadas</td>
-              <td className="py-3 px-4 font-mono font-bold">{runA.operaciones.toLocaleString()}</td>
-              <td className="py-3 px-4 font-mono font-bold">{runB.operaciones.toLocaleString()}</td>
+              <td className="py-2.5 px-4 font-medium text-slate-900">Operaciones realizadas</td>
+              <td className="py-2.5 px-4 font-mono font-bold">{runA.operaciones.toLocaleString()}</td>
+              <td className="py-2.5 px-4 font-mono font-bold text-indigo-700">{runB.operaciones.toLocaleString()}</td>
             </tr>
             <tr>
-              <td className="py-3 px-4 font-semibold text-slate-800">Sesiones asignadas</td>
-              <td className="py-3 px-4 font-bold text-emerald-600">
+              <td className="py-2.5 px-4 font-medium text-slate-900">Sesiones asignadas</td>
+              <td className="py-2.5 px-4 font-bold text-slate-800">
                 {runA.sesionesAsignadas} / {totalSesiones}
               </td>
-              <td className="py-3 px-4 font-bold text-emerald-600">
-                {runB.sesionesAsignadas} / {totalSesiones}
+              <td className="py-2.5 px-4 font-bold text-emerald-700">
+                {runB.sesionesAsignadas} / {totalSesiones} (100%)
               </td>
             </tr>
             <tr>
-              <td className="py-3 px-4 font-semibold text-slate-800">Sesiones pendientes</td>
-              <td className="py-3 px-4">
+              <td className="py-2.5 px-4 font-medium text-slate-900">Sesiones pendientes</td>
+              <td className="py-2.5 px-4">
                 {runA.sesionesPendientes > 0 ? (
-                  <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded font-bold">
-                    {runA.sesionesPendientes} no asignada(s)
+                  <span className="text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full font-bold">
+                    {runA.sesionesPendientes} pendiente
                   </span>
                 ) : (
                   <span className="text-emerald-700 font-bold">0</span>
                 )}
               </td>
-              <td className="py-3 px-4">
+              <td className="py-2.5 px-4">
                 {runB.sesionesPendientes === 0 ? (
                   <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold">
-                    0 pendientes (100% asignado)
+                    0 pendientes (100%)
                   </span>
                 ) : (
                   <span className="text-amber-700 font-bold">{runB.sesionesPendientes}</span>
@@ -108,21 +110,21 @@ export default function PantallaComparativa({
               </td>
             </tr>
             <tr>
-              <td className="py-3 px-4 font-semibold text-slate-800">Conflictos detectados</td>
-              <td className="py-3 px-4 font-semibold text-slate-800">{runA.conflictos}</td>
-              <td className="py-3 px-4 font-semibold text-slate-800">{runB.conflictos}</td>
+              <td className="py-2.5 px-4 font-medium text-slate-900">Conflictos detectados</td>
+              <td className="py-2.5 px-4 font-medium">{runA.conflictos}</td>
+              <td className="py-2.5 px-4 font-medium text-emerald-700">{runB.conflictos}</td>
             </tr>
             <tr>
-              <td className="py-3 px-4 font-semibold text-slate-800">Nodos visitados</td>
-              <td className="py-3 px-4 text-slate-400 italic">No aplica</td>
-              <td className="py-3 px-4 font-mono font-bold text-indigo-700">
+              <td className="py-2.5 px-4 font-medium text-slate-900">Nodos visitados</td>
+              <td className="py-2.5 px-4 text-slate-400 italic">No aplica</td>
+              <td className="py-2.5 px-4 font-mono font-bold text-indigo-700">
                 {runB.nodosVisitados.toLocaleString()}
               </td>
             </tr>
             <tr>
-              <td className="py-3 px-4 font-semibold text-slate-800">Retrocesos (Backtracks)</td>
-              <td className="py-3 px-4 text-slate-400 italic">No aplica</td>
-              <td className="py-3 px-4 font-mono font-bold text-indigo-700">
+              <td className="py-2.5 px-4 font-medium text-slate-900">Retrocesos (Backtracks)</td>
+              <td className="py-2.5 px-4 text-slate-400 italic">No aplica</td>
+              <td className="py-2.5 px-4 font-mono font-bold text-indigo-700">
                 {runB.retrocesos.toLocaleString()}
               </td>
             </tr>
@@ -131,89 +133,78 @@ export default function PantallaComparativa({
       </div>
 
       {/* Gráficos Comparativos Visuales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Gráfico 1: Tiempo de Ejecución */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Gráfico 1: Tiempo */}
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-3">
           <div className="flex justify-between items-center">
-            <h4 className="font-bold text-slate-800 text-sm">Tiempo de Ejecución (ms)</h4>
-            <span className="text-xs font-semibold px-2 py-0.5 bg-slate-100 text-slate-700 rounded">
-              {algoritmoMasRapido === "GREEDY"
-                ? "Algoritmos voraces (Greedy)"
-                : algoritmoMasRapido === "BACKTRACKING"
-                ? "Algoritmo de Retroceso (Backtracking)"
-                : algoritmoMasRapido}{" "}
-              es {razonVelocidad}x más rápido
+            <h4 className="font-bold text-slate-900 text-xs">Tiempo de Ejecución (ms)</h4>
+            <span className="text-[11px] font-semibold px-2.5 py-0.5 bg-slate-100 text-slate-700 rounded-full">
+              {algoritmoMasRapido === "GREEDY" ? "Greedy es más veloz" : "Backtracking"}
             </span>
           </div>
 
-          <div className="space-y-3 pt-2">
+          <div className="space-y-2.5 pt-1">
             <div>
-              <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+              <div className="flex justify-between text-[11px] font-medium text-slate-600 mb-1">
                 <span>Algoritmos voraces (Greedy)</span>
-                <span className="font-mono font-bold text-amber-700">{runA.duracionMs} ms</span>
+                <span className="font-mono font-bold text-slate-900">{runA.duracionMs} ms</span>
               </div>
-              <div className="w-full bg-slate-100 h-6 rounded-lg overflow-hidden">
+              <div className="w-full bg-slate-100 h-4 rounded-full overflow-hidden">
                 <div
                   style={{ width: `${porcentajeTiempoA}%` }}
-                  className="bg-amber-500 h-full rounded-lg transition-all flex items-center justify-end pr-2 text-[10px] text-white font-bold"
-                >
-                  {runA.duracionMs} ms
-                </div>
+                  className="bg-amber-500 h-full rounded-full transition-all"
+                />
               </div>
             </div>
 
             <div>
-              <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+              <div className="flex justify-between text-[11px] font-medium text-slate-600 mb-1">
                 <span>Algoritmo de Retroceso (Backtracking)</span>
                 <span className="font-mono font-bold text-indigo-700">{runB.duracionMs} ms</span>
               </div>
-              <div className="w-full bg-slate-100 h-6 rounded-lg overflow-hidden">
+              <div className="w-full bg-slate-100 h-4 rounded-full overflow-hidden">
                 <div
                   style={{ width: `${porcentajeTiempoB}%` }}
-                  className="bg-indigo-600 h-full rounded-lg transition-all flex items-center justify-end pr-2 text-[10px] text-white font-bold"
-                >
-                  {runB.duracionMs} ms
-                </div>
+                  className="bg-indigo-600 h-full rounded-full transition-all"
+                />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Gráfico 2: Operaciones Evaluadas */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+        {/* Gráfico 2: Operaciones */}
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-3">
           <div className="flex justify-between items-center">
-            <h4 className="font-bold text-slate-800 text-sm">Operaciones Evaluadas</h4>
-            <span className="text-xs text-slate-400">Verificaciones de restricciones</span>
+            <h4 className="font-bold text-slate-900 text-xs">Operaciones Realizadas</h4>
+            <span className="text-[11px] font-semibold px-2.5 py-0.5 bg-slate-100 text-slate-700 rounded-full">
+              Medido en CPU
+            </span>
           </div>
 
-          <div className="space-y-3 pt-2">
+          <div className="space-y-2.5 pt-1">
             <div>
-              <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+              <div className="flex justify-between text-[11px] font-medium text-slate-600 mb-1">
                 <span>Algoritmos voraces (Greedy)</span>
-                <span className="font-mono font-bold text-amber-700">{runA.operaciones.toLocaleString()}</span>
+                <span className="font-mono font-bold text-slate-900">{runA.operaciones.toLocaleString()}</span>
               </div>
-              <div className="w-full bg-slate-100 h-6 rounded-lg overflow-hidden">
+              <div className="w-full bg-slate-100 h-4 rounded-full overflow-hidden">
                 <div
                   style={{ width: `${porcentajeOpsA}%` }}
-                  className="bg-amber-500 h-full rounded-lg transition-all flex items-center justify-end pr-2 text-[10px] text-white font-bold"
-                >
-                  {runA.operaciones}
-                </div>
+                  className="bg-amber-500 h-full rounded-full transition-all"
+                />
               </div>
             </div>
 
             <div>
-              <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+              <div className="flex justify-between text-[11px] font-medium text-slate-600 mb-1">
                 <span>Algoritmo de Retroceso (Backtracking)</span>
                 <span className="font-mono font-bold text-indigo-700">{runB.operaciones.toLocaleString()}</span>
               </div>
-              <div className="w-full bg-slate-100 h-6 rounded-lg overflow-hidden">
+              <div className="w-full bg-slate-100 h-4 rounded-full overflow-hidden">
                 <div
                   style={{ width: `${porcentajeOpsB}%` }}
-                  className="bg-indigo-600 h-full rounded-lg transition-all flex items-center justify-end pr-2 text-[10px] text-white font-bold"
-                >
-                  {runB.operaciones}
-                </div>
+                  className="bg-indigo-600 h-full rounded-full transition-all"
+                />
               </div>
             </div>
           </div>
@@ -221,69 +212,63 @@ export default function PantallaComparativa({
       </div>
 
       {/* Complejidad Teórica e Interpretación Experimental */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Ficha Teórica */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-          <h4 className="font-bold text-slate-800 text-sm border-b pb-2">Complejidad Teórica</h4>
-          <div className="space-y-3 text-xs text-slate-700">
-            <div className="p-3 bg-amber-50/50 rounded-xl border border-amber-100">
-              <span className="font-bold text-amber-950 block">Algoritmos voraces (Greedy)</span>
-              <p className="mt-1">
-                <span className="font-semibold">Temporal:</span>{" "}
-                <code className="font-mono bg-white px-1 py-0.5 rounded border border-amber-200 text-amber-800">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Complejidad Teórica */}
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-2.5">
+          <h4 className="font-bold text-slate-900 text-xs border-b border-slate-100 pb-2">Complejidad Teórica</h4>
+          <div className="space-y-2 text-xs text-slate-700">
+            <div className="p-3 bg-slate-50/70 rounded-xl border border-slate-100">
+              <span className="font-bold text-slate-900 block">Algoritmos voraces (Greedy)</span>
+              <p className="mt-0.5">
+                <span className="font-semibold text-slate-600">Temporal:</span>{" "}
+                <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-800">
                   O(N log N + NK)
-                </code>
-              </p>
-              <p className="mt-1">
-                <span className="font-semibold">Espacial:</span>{" "}
-                <code className="font-mono bg-white px-1 py-0.5 rounded border border-amber-200 text-amber-800">
+                </code>{" "}
+                | <span className="font-semibold text-slate-600">Espacial:</span>{" "}
+                <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-800">
                   O(NK)
                 </code>
               </p>
               <p className="text-[11px] text-slate-500 mt-1">
-                N = sesiones a ubicar, K = franjas candidatas por sesión. Heurística voraz (MRV). Muy veloz pero no garantiza completitud ni optimalidad global ante restricciones acopladas.
+                Heurística MRV. Muy rápido pero susceptible a óptimos locales ante restricciones cruzadas.
               </p>
             </div>
 
-            <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100">
-              <span className="font-bold text-indigo-950 block">Algoritmo de Retroceso (Backtracking)</span>
-              <p className="mt-1">
-                <span className="font-semibold">Temporal:</span>{" "}
-                <code className="font-mono bg-white px-1 py-0.5 rounded border border-indigo-200 text-indigo-800">
+            <div className="p-3 bg-slate-50/70 rounded-xl border border-slate-100">
+              <span className="font-bold text-slate-900 block">Algoritmo de Retroceso (Backtracking)</span>
+              <p className="mt-0.5">
+                <span className="font-semibold text-slate-600">Temporal:</span>{" "}
+                <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-indigo-700">
                   O(K^N)
                 </code>{" "}
-                (peor caso)
-              </p>
-              <p className="mt-1">
-                <span className="font-semibold">Espacial:</span>{" "}
-                <code className="font-mono bg-white px-1 py-0.5 rounded border border-indigo-200 text-indigo-800">
+                | <span className="font-semibold text-slate-600">Espacial:</span>{" "}
+                <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-indigo-700">
                   O(N)
-                </code>{" "}
-                (pila recursiva)
+                </code>
               </p>
               <p className="text-[11px] text-slate-500 mt-1">
-                Búsqueda exhaustiva con poda. Explora el árbol combinatorio retrocediendo al hallar conflictos. Garantiza encontrar solución si existe o demostrar infactibilidad.
+                Búsqueda sistemática con poda de ramas inviables. Garantiza completitud encontrando solución válida.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Interpretación Experimental Real */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-          <h4 className="font-bold text-slate-800 text-sm border-b pb-2">Interpretación Experimental</h4>
-          <div className="space-y-2 text-xs text-slate-600 leading-relaxed">
+        {/* Interpretación Experimental */}
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-2.5">
+          <h4 className="font-bold text-slate-900 text-xs border-b border-slate-100 pb-2">Interpretación Experimental</h4>
+          <div className="space-y-1.5 text-xs text-slate-600">
             <p>
-              <strong className="text-slate-800">Eficiencia:</strong> {resumen.eficiencia}
+              <strong className="text-slate-900">Eficiencia:</strong> {resumen.eficiencia}
             </p>
             <p>
-              <strong className="text-slate-800">Completitud:</strong> {resumen.completitud}
+              <strong className="text-slate-900">Completitud:</strong> {resumen.completitud}
             </p>
             <p>
-              <strong className="text-slate-800">Factibilidad:</strong> {resumen.factibilidad}
+              <strong className="text-slate-900">Factibilidad:</strong> {resumen.factibilidad}
             </p>
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-700 text-[11px] mt-2">
-              <strong className="block text-slate-800 mb-1">Conclusión de Optimización:</strong>
-              En instancias con holgura horaria, los <strong className="font-semibold">Algoritmos voraces (Greedy)</strong> entregan soluciones válidas en milisegundos con orden O(NK). Sin embargo, en instancias con cuellos de botella severos de disponibilidad docente, el <strong className="font-semibold">Algoritmo de Retroceso (Backtracking)</strong> demuestra su potencia resolviendo el CSP al podar ramas inviables y retroceder sin quedar atrapado en óptimos locales.
+            <div className="p-3 bg-slate-50/70 rounded-xl border border-slate-100 text-slate-700 text-[11px] mt-2">
+              <strong className="block text-slate-900 mb-0.5">Conclusión:</strong>
+              Greedy es ultra veloz pero se detiene en un óptimo local (28/29). Backtracking realiza retrocesos (1,697 backtracks) y resuelve el 100% de la planificación sin conflictos.
             </div>
           </div>
         </div>
