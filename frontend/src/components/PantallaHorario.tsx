@@ -168,8 +168,8 @@ export default function PantallaHorario({
           <span className="text-xs font-bold text-slate-800">
             Asignaturas de {anoSeleccionado} ({materiasDelAno.length})
           </span>
-          <span className="text-[11px] text-slate-500">
-            Distribución en Salones 101, 102 y 103
+          <span className="text-[11px] text-slate-400 font-medium">
+            5 materias por cohorte
           </span>
         </div>
 

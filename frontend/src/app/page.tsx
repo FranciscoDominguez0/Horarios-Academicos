@@ -248,7 +248,7 @@ export default function PaginaPrincipal() {
     {
       id: "horario",
       nombre: "Horario Semanal",
-      descripcion: "Distribución semanal de asignaturas sin choques en Salón 101, Salón 102 y Salón 103.",
+      descripcion: "Distribución de clases asignadas por cohorte y horario semanal.",
       icono: IconoCalendario,
       badge: sesionesBacktracking.length > 0 ? `${sesionesBacktracking.length}` : undefined,
     },
@@ -365,7 +365,7 @@ export default function PaginaPrincipal() {
         </div>
 
         {/* Ficha Inferior de Período y Estado */}
-        <div className="p-4 m-2 rounded-2xl bg-white/80 border border-slate-200/70 shadow-xs space-y-2">
+        <div className="p-4 m-2 rounded-2xl bg-white/80 border border-slate-200/70 shadow-xs space-y-1.5">
           <div className="flex items-center justify-between text-[11px]">
             <span className="text-slate-500 font-medium">Período</span>
             <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-0.5 rounded-full text-[10px]">
@@ -375,10 +375,6 @@ export default function PaginaPrincipal() {
           </div>
           <div className="text-xs font-bold text-slate-900 truncate">
             {periodo ? periodo.name : "Cargando..."}
-          </div>
-          <div className="text-[11px] text-slate-500 flex items-center justify-between pt-1 border-t border-slate-200/60">
-            <span>Salones Físicos:</span>
-            <span className="font-semibold text-slate-800">101, 102, 103</span>
           </div>
         </div>
       </aside>
@@ -401,24 +397,13 @@ export default function PaginaPrincipal() {
             </span>
           </div>
 
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                {opcionActivaInfo.nombre}
-              </h1>
-              <p className="text-xs text-slate-500 mt-1">
-                {opcionActivaInfo.descripcion}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] font-semibold text-slate-700 bg-slate-100 px-3.5 py-1 rounded-full border border-slate-200/60">
-                {totalSesionesRequeridas} sesiones planificadas
-              </span>
-              <span className="text-[11px] font-semibold text-slate-700 bg-slate-100 px-3.5 py-1 rounded-full border border-slate-200/60">
-                Salones 101, 102 y 103
-              </span>
-            </div>
+          <div className="pb-4 border-b border-slate-100">
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+              {opcionActivaInfo.nombre}
+            </h1>
+            <p className="text-xs text-slate-500 mt-1">
+              {opcionActivaInfo.descripcion}
+            </p>
           </div>
         </header>
 

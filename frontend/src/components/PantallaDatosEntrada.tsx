@@ -359,8 +359,8 @@ export default function PantallaDatosEntrada({
               <span className="font-semibold text-slate-900">Lunes a Viernes</span>
             </div>
             <div className="flex justify-between py-1.5 border-b border-slate-100">
-              <span className="font-medium text-slate-500">Salones físicos disponibles:</span>
-              <span className="font-semibold text-slate-900">Salón 101, Salón 102, Salón 103</span>
+              <span className="font-medium text-slate-500">Capacidad de espacios:</span>
+              <span className="font-semibold text-slate-900">3 aulas asignadas</span>
             </div>
             <div className="flex justify-between py-1.5">
               <span className="font-medium text-slate-500">Duración de sesiones:</span>

@@ -31,7 +31,7 @@ export default function PantallaDashboard({
             Resumen General de Planificación
           </span>
           <p className="text-xs text-slate-500">
-            Ingeniería en Informática · 1° Año, 2° Año y 3° Año distribuidos en Salones 101, 102 y 103.
+            Ingeniería en Informática · 1° Año, 2° Año y 3° Año.
           </p>
         </div>
 
@@ -87,7 +87,7 @@ export default function PantallaDashboard({
           <div className="text-2xl font-bold text-indigo-600 mt-1">
             {totalSesiones}
           </div>
-          <p className="text-[11px] text-slate-500 mt-0.5">En Salones 101, 102 y 103</p>
+          <p className="text-[11px] text-slate-500 mt-0.5">Horario semanal optimizado</p>
         </div>
 
         <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs">

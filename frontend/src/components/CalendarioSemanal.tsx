@@ -29,18 +29,16 @@ const DIAS = [
   { id: 5, nombre: "Viernes" },
 ];
 
-function formatearMinutos(minutos: number): string {
+function formatearHora12(minutos: number): string {
   const h = Math.floor(minutos / 60);
   const m = minutos % 60;
   const ampm = h >= 12 ? "PM" : "AM";
   const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")} ${ampm}`;
+  return `${h12}:${m.toString().padStart(2, "0")} ${ampm}`;
 }
 
-function formatearHoraCorta(minutos: number): string {
-  const h = Math.floor(minutos / 60);
-  const m = minutos % 60;
-  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+export function formatearHoraCorta(minutos: number): string {
+  return formatearHora12(minutos);
 }
 
 export const ESTILOS_MATERIAS: Record<
@@ -283,7 +281,7 @@ export default function CalendarioSemanal({
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+    <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs">
       {/* Cabecera del Calendario */}
       <div className="grid grid-cols-[70px_repeat(5,1fr)] border-b border-slate-200 bg-white sticky top-0 z-10">
         <div className="py-3 border-r border-slate-100 text-center text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
