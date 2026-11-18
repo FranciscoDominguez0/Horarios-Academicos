@@ -283,7 +283,7 @@ export default function CalendarioSemanal({
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs">
       {/* Cabecera del Calendario */}
-      <div className="grid grid-cols-[70px_repeat(5,1fr)] border-b border-slate-200 bg-white sticky top-0 z-10">
+      <div className="grid grid-cols-[82px_repeat(5,1fr)] border-b border-slate-200 bg-white sticky top-0 z-10">
         <div className="py-3 border-r border-slate-100 text-center text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
           Hora
         </div>
@@ -298,40 +298,26 @@ export default function CalendarioSemanal({
       </div>
 
       {/* Contenedor Cuadrícula de Tiempo */}
-      <div className="grid grid-cols-[70px_repeat(5,1fr)] relative h-[680px] bg-white overflow-y-auto">
-        {/* Línea de Hora Actual (como en la referencia) */}
-        {(() => {
-          const horaActualMinutos = 600; // 10:00 AM
-          if (horaActualMinutos >= jornadaInicioMinuto && horaActualMinutos <= jornadaFinMinuto) {
-            const top = ((horaActualMinutos - jornadaInicioMinuto) / duracionTotalJornada) * 100;
-            return (
-              <div
-                style={{ top: `${top}%` }}
-                className="absolute left-0 right-0 z-30 pointer-events-none flex items-center -translate-y-1/2"
-              >
-                <div className="w-[70px] flex justify-end pr-1">
-                  <span className="bg-slate-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-                    10:00
-                  </span>
-                </div>
-                <div className="flex-1 border-t-2 border-slate-900" />
-              </div>
-            );
-          }
-          return null;
-        })()}
-
+      <div className="grid grid-cols-[82px_repeat(5,1fr)] relative h-[680px] bg-white overflow-y-auto">
         {/* Regla de Horas Lateral */}
         <div className="relative border-r border-slate-100 select-none bg-slate-50/30">
           {horasGuia.map((min) => {
             const top = ((min - jornadaInicioMinuto) / duracionTotalJornada) * 100;
+            const esPrimeraHora = min === jornadaInicioMinuto;
+            const esUltimaHora = min === jornadaFinMinuto;
+            const translateClase = esPrimeraHora
+              ? "translate-y-1.5"
+              : esUltimaHora
+              ? "-translate-y-full pb-1"
+              : "-translate-y-1/2";
+
             return (
               <div
                 key={min}
                 style={{ top: `${top}%` }}
-                className="absolute left-0 right-2 text-right text-[11px] font-medium text-slate-400 -translate-y-1/2 pr-1"
+                className={`absolute left-0 right-2 text-right text-[11px] font-semibold text-slate-400 pr-1 ${translateClase}`}
               >
-                {formatearHoraCorta(min)}
+                {formatearHora12(min)}
               </div>
             );
           })}
@@ -380,8 +366,8 @@ export default function CalendarioSemanal({
                   <div
                     key={item.id}
                     style={{
-                      top: `${Math.max(0, topPorcentaje)}%`,
-                      height: `${Math.max(4, alturaPorcentaje)}%`,
+                      top: `calc(${Math.max(0, topPorcentaje)}% + 3px)`,
+                      height: `calc(${Math.max(4, alturaPorcentaje)}% - 6px)`,
                       left: `${leftPorcentaje}%`,
                       width: `${anchoPorcentaje}%`,
                     }}
@@ -414,7 +400,7 @@ export default function CalendarioSemanal({
                         <div className="flex items-center gap-1 font-mono text-[10px] text-slate-500">
                           <IconoReloj className="w-2.5 h-2.5 text-slate-400 shrink-0" />
                           <span>
-                            {formatearHoraCorta(item.inicioMinuto)} - {formatearHoraCorta(item.finMinuto)}
+                            {formatearHora12(item.inicioMinuto)} – {formatearHora12(item.finMinuto)}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 truncate text-slate-700">

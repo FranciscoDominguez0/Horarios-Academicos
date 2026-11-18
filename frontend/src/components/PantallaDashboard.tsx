@@ -37,7 +37,7 @@ export default function PantallaDashboard({
 
         <div className="flex gap-2">
           <button
-            onClick={() => onNavegar("ejecucion")}
+            onClick={() => onNavegar("horario")}
             className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs"
           >
             <IconoEjecucion className="w-3.5 h-3.5" />
@@ -54,20 +54,7 @@ export default function PantallaDashboard({
       </div>
 
       {/* Métricas Principales */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
-            <span>Período Activo</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-          </div>
-          <div className="text-lg font-bold text-slate-900 mt-2 truncate">
-            {periodo ? periodo.name : "Cargando..."}
-          </div>
-          <span className="inline-block mt-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full">
-            {periodo?.status === "ACTIVE" ? "Activo" : periodo?.status ?? "Lectivo"}
-          </span>
-        </div>
-
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
             <span>Asignaturas</span>
@@ -141,10 +128,10 @@ export default function PantallaDashboard({
               )}
             </div>
             <button
-              onClick={() => onNavegar("ejecucion")}
+              onClick={() => onNavegar("horario")}
               className="mt-4 w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-full text-xs font-semibold border border-slate-200 transition-all"
             >
-              Ejecutar Algoritmos voraces (Greedy)
+              Configurar y Ejecutar Horario
             </button>
           </div>
 
@@ -183,10 +170,10 @@ export default function PantallaDashboard({
               )}
             </div>
             <button
-              onClick={() => onNavegar("ejecucion")}
+              onClick={() => onNavegar("horario")}
               className="mt-4 w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-full text-xs font-semibold border border-slate-200 transition-all"
             >
-              Ejecutar Backtracking
+              Configurar y Ejecutar Horario
             </button>
           </div>
         </div>

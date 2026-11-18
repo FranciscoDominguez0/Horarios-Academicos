@@ -1,8 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import CalendarioSemanal, { SesionCalendario, obtenerEstiloMateria } from "./CalendarioSemanal";
-import { IconoCheck, IconoAlerta, IconoEstudiante, IconoProfesor, IconoUbicacion } from "./Iconos";
+import {
+  IconoCheck,
+  IconoAlerta,
+  IconoEstudiante,
+  IconoProfesor,
+  IconoUbicacion,
+  IconoEjecucion,
+} from "./Iconos";
+
+export type ModoEjecucion = "GREEDY" | "BACKTRACKING" | "AMBOS";
 
 interface PropiedadesHorario {
   sesionesGreedy: SesionCalendario[];
@@ -10,6 +20,15 @@ interface PropiedadesHorario {
   infoGreedy: any | null;
   infoBacktracking: any | null;
   totalSesionesRequeridas: number;
+  alEjecutar?: (
+    modo: ModoEjecucion,
+    configuracion: {
+      pasoCuadriculaMinutos: number;
+      jornadaInicioMinuto: number;
+      jornadaFinMinuto: number;
+    }
+  ) => Promise<void>;
+  cargando?: boolean;
 }
 
 const ANOS_ACADEMICOS = [
@@ -24,9 +43,21 @@ export default function PantallaHorario({
   infoGreedy,
   infoBacktracking,
   totalSesionesRequeridas,
+  alEjecutar,
+  cargando = false,
 }: PropiedadesHorario) {
   const [algoritmoActivo, setAlgoritmoActivo] = useState<"GREEDY" | "BACKTRACKING">("GREEDY");
   const [anoSeleccionado, setAnoSeleccionado] = useState<string>("1° Año");
+
+  // Estado del Modal de Ejecución
+  const [modalAbierto, setModalAbierto] = useState<boolean>(false);
+  const [modo, setModo] = useState<ModoEjecucion>("AMBOS");
+  const [pasoCuadricula, setPasoCuadricula] = useState<number>(60);
+  const [montado, setMontado] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMontado(true);
+  }, []);
 
   const sesionesActuales = algoritmoActivo === "GREEDY" ? sesionesGreedy : sesionesBacktracking;
   const infoActual = algoritmoActivo === "GREEDY" ? infoGreedy : infoBacktracking;
@@ -59,9 +90,9 @@ export default function PantallaHorario({
 
   return (
     <div className="space-y-5">
-      {/* Barra de Filtros por Año y Algoritmo estilo Exam Calendar */}
+      {/* Barra de Filtros por Año, Conmutador y Botón Modal estilo SaaS */}
       <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        {/* Selector de Año Académico estilo < [1° Año] [2° Año] [3° Año] > */}
+        {/* Selector de Cohorte */}
         <div className="flex items-center gap-3 flex-wrap">
           <span className="text-xs font-bold text-slate-800">Cohorte:</span>
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -96,22 +127,23 @@ export default function PantallaHorario({
           </div>
         </div>
 
-        {/* Conmutador de Algoritmo con Pastillas Redondeadas */}
-        <div className="flex items-center gap-2">
+        {/* Grupo de Controles: Conmutador y Botón Modal */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Conmutador de Algoritmo */}
           <div className="flex bg-slate-100 p-1 rounded-full">
             <button
               onClick={() => setAlgoritmoActivo("GREEDY")}
-              className={`py-1.5 px-4 rounded-full text-xs font-semibold transition-all ${
+              className={`py-1.5 px-3.5 rounded-full text-xs font-semibold transition-all ${
                 algoritmoActivo === "GREEDY"
                   ? "bg-white text-slate-900 shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              Algoritmos voraces (Greedy) ({sesionesGreedy.length}/{totalSesionesRequeridas})
+              Greedy ({sesionesGreedy.length}/{totalSesionesRequeridas})
             </button>
             <button
               onClick={() => setAlgoritmoActivo("BACKTRACKING")}
-              className={`py-1.5 px-4 rounded-full text-xs font-semibold transition-all ${
+              className={`py-1.5 px-3.5 rounded-full text-xs font-semibold transition-all ${
                 algoritmoActivo === "BACKTRACKING"
                   ? "bg-white text-slate-900 shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
@@ -120,8 +152,159 @@ export default function PantallaHorario({
               Backtracking ({sesionesBacktracking.length}/{totalSesionesRequeridas})
             </button>
           </div>
+
+          {/* Botón para Abrir Modal de Ejecución */}
+          {alEjecutar && (
+            <button
+              onClick={() => setModalAbierto(true)}
+              className="py-2 px-4 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold flex items-center gap-2 transition-all shadow-xs shrink-0"
+            >
+              <IconoEjecucion className="w-3.5 h-3.5" />
+              <span>Ejecutar Algoritmos</span>
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Modal Sencillo de Ejecución de Algoritmos montado con createPortal en document.body */}
+      {montado && modalAbierto && createPortal(
+        <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 z-[99999] w-screen h-screen bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-slate-100 space-y-4 animate-in zoom-in-95 duration-150">
+            {/* Cabecera del Modal */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
+                  Ejecutar Planificación
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Configura y corre los motores de asignación
+                </p>
+              </div>
+              <button
+                onClick={() => !cargando && setModalAbierto(false)}
+                className="text-slate-400 hover:text-slate-700 text-lg font-bold p-1 leading-none transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Selector de Estrategia */}
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-slate-800">
+                Estrategia Algorítmica:
+              </label>
+              <div className="space-y-1.5">
+                <button
+                  type="button"
+                  onClick={() => setModo("AMBOS")}
+                  className={`w-full text-left p-3 rounded-xl border transition-all text-xs flex items-center justify-between ${
+                    modo === "AMBOS"
+                      ? "bg-slate-900 text-white border-slate-900 shadow-2xs font-semibold"
+                      : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
+                  }`}
+                >
+                  <div>
+                    <span className="font-semibold block">Ejecutar Ambos (Comparativa)</span>
+                    <span className={`text-[11px] ${modo === "AMBOS" ? "text-slate-300" : "text-slate-400"}`}>
+                      Calcula Greedy y Backtracking para contrastar
+                    </span>
+                  </div>
+                  {modo === "AMBOS" && <IconoCheck className="w-4 h-4 text-white shrink-0" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setModo("BACKTRACKING")}
+                  className={`w-full text-left p-3 rounded-xl border transition-all text-xs flex items-center justify-between ${
+                    modo === "BACKTRACKING"
+                      ? "bg-slate-900 text-white border-slate-900 shadow-2xs font-semibold"
+                      : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
+                  }`}
+                >
+                  <div>
+                    <span className="font-semibold block">Algoritmo de Retroceso (Backtracking)</span>
+                    <span className={`text-[11px] ${modo === "BACKTRACKING" ? "text-slate-300" : "text-slate-400"}`}>
+                      Búsqueda con poda. Garantiza 100% de cobertura sin choques
+                    </span>
+                  </div>
+                  {modo === "BACKTRACKING" && <IconoCheck className="w-4 h-4 text-white shrink-0" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setModo("GREEDY")}
+                  className={`w-full text-left p-3 rounded-xl border transition-all text-xs flex items-center justify-between ${
+                    modo === "GREEDY"
+                      ? "bg-slate-900 text-white border-slate-900 shadow-2xs font-semibold"
+                      : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
+                  }`}
+                >
+                  <div>
+                    <span className="font-semibold block">Algoritmo Voraz (Greedy)</span>
+                    <span className={`text-[11px] ${modo === "GREEDY" ? "text-slate-300" : "text-slate-400"}`}>
+                      Decisión local rápida mediante heurística MRV
+                    </span>
+                  </div>
+                  {modo === "GREEDY" && <IconoCheck className="w-4 h-4 text-white shrink-0" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Selector de Intervalo de Horarios */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-slate-800">
+                Intervalo de Horarios:
+              </label>
+              <select
+                value={pasoCuadricula}
+                onChange={(e) => setPasoCuadricula(Number(e.target.value))}
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 hover:border-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 rounded-xl text-slate-800 text-xs font-medium outline-hidden"
+              >
+                <option value={60}>Cada 60 minutos (Recomendado · Clases de 2h y 3h)</option>
+                <option value={30}>Cada 30 minutos (Granular · Mayor espacio de búsqueda)</option>
+              </select>
+            </div>
+
+            {/* Botones de Acción estilo Imagen 2 */}
+            <div className="pt-3 flex items-center justify-end gap-2.5 border-t border-slate-100">
+              <button
+                type="button"
+                disabled={cargando}
+                onClick={() => setModalAbierto(false)}
+                className="px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-xl font-semibold border border-slate-300 transition-all text-xs shadow-2xs disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={cargando}
+                onClick={async () => {
+                  if (alEjecutar) {
+                    await alEjecutar(modo, {
+                      pasoCuadriculaMinutos: pasoCuadricula,
+                      jornadaInicioMinuto: 480,
+                      jornadaFinMinuto: 1080,
+                    });
+                    if (modo === "BACKTRACKING") setAlgoritmoActivo("BACKTRACKING");
+                    if (modo === "GREEDY") setAlgoritmoActivo("GREEDY");
+                    setModalAbierto(false);
+                  }
+                }}
+                className="px-6 py-2.5 bg-[#172554] hover:bg-[#0f172a] text-white rounded-xl font-semibold transition-all shadow-xs disabled:opacity-50 text-xs flex items-center gap-2"
+              >
+                {cargando ? (
+                  <span>Calculando...</span>
+                ) : (
+                  <span>Iniciar Planificación</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* Resumen de Estado Conciso */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">

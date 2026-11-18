@@ -20,15 +20,11 @@ function hayConflicto(
   intervalosExistentes: IntervaloTiempo[] | undefined,
   contadorOps: { total: number }
 ): boolean {
-  if (!intervalosExistentes || intervalosExistentes.length === 0) {
-    return false;
-  }
+  if (!intervalosExistentes || intervalosExistentes.length === 0) return false;
 
   for (const intervalo of intervalosExistentes) {
     contadorOps.total++;
-    if (seSolapan(candidato, intervalo)) {
-      return true;
-    }
+    if (seSolapan(candidato, intervalo)) return true;
   }
 
   return false;
@@ -43,7 +39,7 @@ export function ejecutarPlanificacionGreedy(
   const sesiones = generarSesionesProgramables(entrada.asignaciones);
   const mapaCandidatos = generarMapaCandidatos(sesiones, entrada);
 
-  // Heurística voraz: ordenar primero las sesiones con menor cantidad de candidatos (MRV)
+  // Heurística MRV: ordenar primero las sesiones con menor cantidad de candidatos
   const sesionesOrdenadas = [...sesiones].sort((a, b) => {
     contadorOps.total++;
     const cantA = mapaCandidatos.get(a.id)?.length ?? 0;
@@ -65,19 +61,9 @@ export function ejecutarPlanificacionGreedy(
       const claveDocente = claveOcupacion(sesion.docenteId, candidato.diaSemana);
       const claveGrupo = claveOcupacion(sesion.grupoId, candidato.diaSemana);
 
-      const cruceDocente = hayConflicto(
-        candidato,
-        ocupacionDocentes.get(claveDocente),
-        contadorOps
-      );
+      const cruceDocente = hayConflicto(candidato, ocupacionDocentes.get(claveDocente), contadorOps);
+      const cruceGrupo = hayConflicto(candidato, ocupacionGrupos.get(claveGrupo), contadorOps);
 
-      const cruceGrupo = hayConflicto(
-        candidato,
-        ocupacionGrupos.get(claveGrupo),
-        contadorOps
-      );
-
-      // Si no genera conflicto con asignaciones previas, tomar decisión local inmediata
       if (!cruceDocente && !cruceGrupo) {
         candidatoAsignado = candidato;
 
@@ -101,22 +87,18 @@ export function ejecutarPlanificacionGreedy(
   }
 
   const finReloj = performance.now();
-  const tiempoMs = Number((finReloj - inicioReloj).toFixed(3));
-
-  const validacion = validarHorario(
-    sesionesAsignadas,
-    entrada,
-    sesiones.length
-  );
+  const duracionMs = Number((finReloj - inicioReloj).toFixed(3));
+  const completado = sesionesPendientes.length === 0;
+  const validacion = validarHorario(sesionesAsignadas, entrada, sesiones.length);
 
   return {
     algoritmo: "GREEDY",
-    estado: "COMPLETED",
-    completado: sesionesPendientes.length === 0,
+    estado: completado ? "COMPLETED" : "NO_SOLUTION",
+    completado,
     sesionesAsignadas,
     sesionesPendientes,
     metricas: {
-      tiempoMs,
+      tiempoMs: duracionMs,
       operaciones: contadorOps.total,
     },
     validacion,

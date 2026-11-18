@@ -3,8 +3,7 @@
 import React, { useEffect, useState } from "react";
 import PantallaDashboard from "../components/PantallaDashboard";
 import PantallaDatosEntrada, { AsignacionDetalle, DocenteDetalle, ItemSimple } from "../components/PantallaDatosEntrada";
-import PantallaEjecucion, { ModoEjecucion } from "../components/PantallaEjecucion";
-import PantallaHorario from "../components/PantallaHorario";
+import PantallaHorario, { ModoEjecucion } from "../components/PantallaHorario";
 import PantallaComparativa from "../components/PantallaComparativa";
 import { SesionCalendario } from "../components/CalendarioSemanal";
 import { MetricasComparativa } from "../components/ComparativaAlgoritmos";
@@ -16,7 +15,7 @@ import {
   IconoComparativa,
 } from "../components/Iconos";
 
-type PantallaActiva = "dashboard" | "entrada" | "ejecucion" | "horario" | "comparativa";
+type PantallaActiva = "dashboard" | "entrada" | "horario" | "comparativa";
 
 export default function PaginaPrincipal() {
   const [pantallaActiva, setPantallaActiva] = useState<PantallaActiva>("dashboard");
@@ -128,9 +127,27 @@ export default function PaginaPrincipal() {
 
   async function recargarAsignaciones() {
     if (!periodo) return;
-    const respAsig = await fetch(`/api/assignments?periodId=${periodo.id}`);
-    if (respAsig.ok) {
-      setAsignaciones(await respAsig.json());
+    try {
+      const respAsig = await fetch(`/api/assignments?periodId=${periodo.id}`);
+      if (respAsig.ok) {
+        setAsignaciones(await respAsig.json());
+      }
+      const respDocentes = await fetch("/api/teachers");
+      if (respDocentes.ok) {
+        const listaDocentes = await respDocentes.json();
+        const docentesConDisp = await Promise.all(
+          listaDocentes.map(async (doc: any) => {
+            const respDisp = await fetch(`/api/teachers/${doc.id}/availability`);
+            const disp = respDisp.ok ? await respDisp.json() : [];
+            return { ...doc, teacher_availability: disp };
+          })
+        );
+        setDocentes(docentesConDisp);
+      }
+      const respMat = await fetch("/api/subjects");
+      if (respMat.ok) setMaterias(await respMat.json());
+    } catch (e) {
+      console.error("Error recargando datos del período:", e);
     }
   }
 
@@ -242,7 +259,7 @@ export default function PaginaPrincipal() {
     {
       id: "dashboard",
       nombre: "Panel General",
-      descripcion: "Resumen ejecutivo del período académico, estado de los algoritmos y métricas principales.",
+      descripcion: "Resumen ejecutivo de asignaciones, estado de los algoritmos y métricas de resolución.",
       icono: IconoDashboard,
     },
     {
@@ -266,12 +283,6 @@ export default function PaginaPrincipal() {
       nombre: "Datos de Entrada",
       descripcion: "Catálogo de asignaturas, profesores asignados, cohortes por año y parámetros globales.",
       icono: IconoDatosEntrada,
-    },
-    {
-      id: "ejecucion",
-      nombre: "Ejecutar Algoritmos",
-      descripcion: "Ejecución bajo demanda de los motores de planificación para evaluar su comportamiento.",
-      icono: IconoEjecucion,
     },
   ];
 
@@ -363,30 +374,16 @@ export default function PaginaPrincipal() {
             </div>
           </div>
         </div>
-
-        {/* Ficha Inferior de Período y Estado */}
-        <div className="p-4 m-2 rounded-2xl bg-white/80 border border-slate-200/70 shadow-xs space-y-1.5">
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="text-slate-500 font-medium">Período</span>
-            <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-0.5 rounded-full text-[10px]">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              Activo
-            </span>
-          </div>
-          <div className="text-xs font-bold text-slate-900 truncate">
-            {periodo ? periodo.name : "Cargando..."}
-          </div>
-        </div>
       </aside>
 
-      {/* Pantalla Principal (Card Blanco Puro con Bordes Suaves rounded-3xl) */}
-      <main className="flex-1 bg-white rounded-3xl border border-slate-200/70 shadow-xs flex flex-col min-w-0 h-[calc(100vh-2rem)] overflow-y-auto">
-        {/* Cabecera con Breadcrumbs estilo SaaS Moderno */}
-        <header className="p-6 md:p-8 pb-4 shrink-0">
-          <div className="flex items-center gap-2 text-xs text-slate-400 font-medium mb-3">
+      {/* Pantalla Principal (Card Blanco Puro con Bordes Suaves rounded-3xl y Header Permanente) */}
+      <main className="flex-1 bg-white rounded-3xl border border-slate-200/70 shadow-xs flex flex-col min-w-0 h-[calc(100vh-2rem)] overflow-hidden">
+        {/* Cabecera Permanente: Solo Migas de Pan (Breadcrumbs) */}
+        <header className="px-6 md:px-8 py-3.5 border-b border-slate-100 bg-white shrink-0 z-20 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
             <button
               onClick={() => setPantallaActiva("dashboard")}
-              className="hover:text-slate-700 transition-colors"
+              className="hover:text-slate-800 transition-colors"
             >
               Academic Scheduler
             </button>
@@ -396,20 +393,11 @@ export default function PaginaPrincipal() {
               <span>{opcionActivaInfo.nombre}</span>
             </span>
           </div>
-
-          <div className="pb-4 border-b border-slate-100">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-              {opcionActivaInfo.nombre}
-            </h1>
-            <p className="text-xs text-slate-500 mt-1">
-              {opcionActivaInfo.descripcion}
-            </p>
-          </div>
         </header>
 
         {/* Notificación de Estado */}
         {mensajeEstado && (
-          <div className="mx-6 md:mx-8 mb-4 p-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-mono text-slate-700 flex justify-between items-center shadow-xs">
+          <div className="mx-6 md:mx-8 mt-4 p-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-mono text-slate-700 flex justify-between items-center shadow-xs shrink-0">
             <span>{mensajeEstado}</span>
             <button
               onClick={() => setMensajeEstado(null)}
@@ -420,8 +408,8 @@ export default function PaginaPrincipal() {
           </div>
         )}
 
-        {/* Contenido Dinámico de la Pantalla Activa */}
-        <div className="p-6 md:p-8 pt-0 flex-1">
+        {/* Contenido Dinámico de la Pantalla Activa con Scroll Independiente */}
+        <div className="p-6 md:p-8 flex-1 overflow-y-auto">
           {pantallaActiva === "dashboard" && (
             <PantallaDashboard
               periodo={periodo}
@@ -445,17 +433,6 @@ export default function PaginaPrincipal() {
             />
           )}
 
-          {pantallaActiva === "ejecucion" && (
-            <PantallaEjecucion
-              periodoId={periodo?.id ?? 1}
-              alEjecutar={manejarEjecucion}
-              cargando={cargando}
-              resumenEjecucion={ultimoResumenEjecutado}
-              onVerHorario={() => setPantallaActiva("horario")}
-              onVerComparativa={() => setPantallaActiva("comparativa")}
-            />
-          )}
-
           {pantallaActiva === "horario" && (
             <PantallaHorario
               sesionesGreedy={sesionesGreedy}
@@ -463,6 +440,8 @@ export default function PaginaPrincipal() {
               infoGreedy={infoGreedy}
               infoBacktracking={infoBacktracking}
               totalSesionesRequeridas={totalSesionesRequeridas}
+              alEjecutar={manejarEjecucion}
+              cargando={cargando}
             />
           )}
 

@@ -1,14 +1,3 @@
-/**
- * Adaptador de datos para el motor de planificación.
- * 
- * Actúa como puente entre la capa de persistencia (Prisma / MySQL)
- * y el motor algorítmico puro (Engine).
- * 
- * Este módulo extrae las asignaciones activas, sus requerimientos de sesión
- * y la disponibilidad de los docentes involucrados, transformándolos
- * en una estructura inmutable `EntradaPlanificacion`.
- */
-
 import { prisma } from "../../config/database.js";
 import {
   AsignacionAcademica,
@@ -17,34 +6,25 @@ import {
   RequerimientoSesion,
 } from "../../engine/types/dominio.js";
 
-/**
- * Parámetros opcionales para personalizar la jornada de planificación.
- */
 export interface OpcionesCargaPlanificacion {
-  jornadaInicioMinuto?: number; // Por defecto 420 (07:00)
-  jornadaFinMinuto?: number; // Por defecto 1080 (18:00)
-  diasPermitidos?: number[]; // Por defecto [1, 2, 3, 4, 5] (Lunes a Viernes)
-  pasoCuadriculaMinutos?: number; // Por defecto 30 minutos
+  jornadaInicioMinuto?: number;
+  jornadaFinMinuto?: number;
+  diasPermitidos?: number[];
+  pasoCuadriculaMinutos?: number;
 }
 
-/**
- * Carga desde la base de datos MySQL toda la información académica necesaria
- * para un período lectivo específico y construye la `EntradaPlanificacion` requerida por el motor.
- */
 export async function cargarEntradaDesdeBd(
   periodoId: number,
   opciones?: OpcionesCargaPlanificacion
 ): Promise<EntradaPlanificacion> {
-  // 1. Verificar existencia y estado del período académico
   const periodo = await prisma.academic_periods.findUnique({
     where: { id: periodoId },
   });
 
   if (!periodo) {
-    throw new Error(`El período académico con ID ${periodoId} no existe en la base de datos.`);
+    throw new Error(`El período académico ${periodoId} no existe.`);
   }
 
-  // 2. Obtener las asignaciones académicas activas del período con sus requerimientos
   const asignacionesBd = await prisma.course_assignments.findMany({
     where: {
       period_id: periodoId,
@@ -56,10 +36,9 @@ export async function cargarEntradaDesdeBd(
   });
 
   if (asignacionesBd.length === 0) {
-    throw new Error(`No se encontraron asignaciones académicas activas para el período ID ${periodoId}.`);
+    throw new Error(`No hay asignaciones activas para el período ${periodoId}.`);
   }
 
-  // 3. Mapear asignaciones y requerimientos a los tipos de dominio puro
   const asignacionesDominio: AsignacionAcademica[] = asignacionesBd.map((asig) => {
     const requerimientosDominio: RequerimientoSesion[] = asig.session_requirements.map((req) => ({
       id: req.id,
@@ -79,16 +58,10 @@ export async function cargarEntradaDesdeBd(
     };
   });
 
-  // 4. Identificar docentes únicos involucrados en las asignaciones
-  const idsDocentesUnicos = Array.from(
-    new Set(asignacionesDominio.map((asig) => asig.docenteId))
-  );
+  const idsDocentes = Array.from(new Set(asignacionesDominio.map((a) => a.docenteId)));
 
-  // 5. Cargar disponibilidad horaria de los docentes involucrados
   const disponibilidadesBd = await prisma.teacher_availability.findMany({
-    where: {
-      teacher_id: { in: idsDocentesUnicos },
-    },
+    where: { teacher_id: { in: idsDocentes } },
   });
 
   const disponibilidadesDominio: DisponibilidadDocente[] = disponibilidadesBd.map((disp) => ({
@@ -99,13 +72,12 @@ export async function cargarEntradaDesdeBd(
     finMinuto: disp.end_minute,
   }));
 
-  // 6. Construir y retornar la entrada inmutable para el motor
   return {
     periodoId,
-    jornadaInicioMinuto: opciones?.jornadaInicioMinuto ?? 420, // 07:00
-    jornadaFinMinuto: opciones?.jornadaFinMinuto ?? 1080, // 18:00
-    diasPermitidos: opciones?.diasPermitidos ?? [1, 2, 3, 4, 5], // Lunes a Viernes
-    pasoCuadriculaMinutos: opciones?.pasoCuadriculaMinutos ?? 30, // Grilla cada 30 min
+    jornadaInicioMinuto: opciones?.jornadaInicioMinuto ?? 420,
+    jornadaFinMinuto: opciones?.jornadaFinMinuto ?? 1080,
+    diasPermitidos: opciones?.diasPermitidos ?? [1, 2, 3, 4, 5],
+    pasoCuadriculaMinutos: opciones?.pasoCuadriculaMinutos ?? 30,
     asignaciones: asignacionesDominio,
     disponibilidades: disponibilidadesDominio,
   };

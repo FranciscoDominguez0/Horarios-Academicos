@@ -1,7 +1,6 @@
 import {
   CandidatoHorario,
   EntradaPlanificacion,
-  EstadoPlanificacion,
   IntervaloTiempo,
   ResultadoPlanificacion,
   SesionAsignada,
@@ -26,15 +25,11 @@ function hayConflicto(
   intervalos: IntervaloTiempo[] | undefined,
   contadorOps: { total: number }
 ): boolean {
-  if (!intervalos || intervalos.length === 0) {
-    return false;
-  }
+  if (!intervalos || intervalos.length === 0) return false;
 
   for (const intervalo of intervalos) {
     contadorOps.total++;
-    if (seSolapan(candidato, intervalo)) {
-      return true;
-    }
+    if (seSolapan(candidato, intervalo)) return true;
   }
 
   return false;
@@ -76,7 +71,6 @@ export function ejecutarPlanificacionBacktracking(
   const sesiones = generarSesionesProgramables(entrada.asignaciones);
   const mapaCandidatos = generarMapaCandidatos(sesiones, entrada);
 
-  // Poda inicial segura: si alguna sesión no tiene candidatos posibles, no existe solución
   for (const sesion of sesiones) {
     const totalCandidatos = mapaCandidatos.get(sesion.id)?.length ?? 0;
     if (totalCandidatos === 0) {
@@ -93,7 +87,7 @@ export function ejecutarPlanificacionBacktracking(
     }
   }
 
-  // Ordenar sesiones por menor cantidad de candidatos (heurística MRV)
+  // Ordenar por heurística MRV (menor cantidad de candidatos primero)
   const sesionesOrdenadas = [...sesiones].sort((a, b) => {
     contadorOps.total++;
     const cantA = mapaCandidatos.get(a.id)?.length ?? 0;
@@ -152,28 +146,32 @@ export function ejecutarPlanificacionBacktracking(
 
   const exito = resolver(0);
   const finReloj = performance.now();
-  const tiempoMs = Number((finReloj - inicioReloj).toFixed(3));
+  const duracionMs = Number((finReloj - inicioReloj).toFixed(3));
 
-  let estado: EstadoPlanificacion = "NO_SOLUTION";
+  let estado: "COMPLETED" | "NO_SOLUTION" | "LIMIT_REACHED";
   if (exito) {
     estado = "COMPLETED";
   } else if (limiteAlcanzado) {
     estado = "LIMIT_REACHED";
+  } else {
+    estado = "NO_SOLUTION";
   }
 
-  const idsAsignados = new Set(horarioActual.map((item) => item.sesion.id));
-  const sesionesPendientes = sesiones.filter((s) => !idsAsignados.has(s.id));
+  const sesionesAsignadas = exito ? [...horarioActual] : [];
+  const sesionesPendientes = exito
+    ? []
+    : sesiones.filter((s) => !sesionesAsignadas.some((a) => a.sesion.id === s.id));
 
-  const validacion = validarHorario(horarioActual, entrada, sesiones.length);
+  const validacion = validarHorario(sesionesAsignadas, entrada, sesiones.length);
 
   return {
     algoritmo: "BACKTRACKING",
     estado,
     completado: exito,
-    sesionesAsignadas: horarioActual,
+    sesionesAsignadas,
     sesionesPendientes,
     metricas: {
-      tiempoMs,
+      tiempoMs: duracionMs,
       operaciones: contadorOps.total,
       nodosVisitados,
       retrocesos,

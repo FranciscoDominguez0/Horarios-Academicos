@@ -145,3 +145,21 @@ enrutadorAsignaciones.patch("/:id/status", async (req: Request, res: Response): 
     res.status(400).json({ mensaje: error.message || "Error al actualizar estado." });
   }
 });
+
+enrutadorAsignaciones.delete("/:id", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = obtenerParametroEntero(req.params.id);
+    await prisma.$transaction(async (tx) => {
+      const reqs = await tx.session_requirements.findMany({ where: { assignment_id: id }, select: { id: true } });
+      const reqIds = reqs.map((r) => r.id);
+      if (reqIds.length > 0) {
+        await tx.schedule_sessions.deleteMany({ where: { requirement_id: { in: reqIds } } });
+      }
+      await tx.session_requirements.deleteMany({ where: { assignment_id: id } });
+      await tx.course_assignments.delete({ where: { id } });
+    });
+    res.json({ mensaje: `Asignación ${id} eliminada con éxito.` });
+  } catch (error: any) {
+    res.status(400).json({ mensaje: error.message || "Error al eliminar asignación." });
+  }
+});
