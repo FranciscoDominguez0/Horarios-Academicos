@@ -62,14 +62,27 @@ export default function PantallaHorario({
   const sesionesActuales = algoritmoActivo === "GREEDY" ? sesionesGreedy : sesionesBacktracking;
   const infoActual = algoritmoActivo === "GREEDY" ? infoGreedy : infoBacktracking;
 
-  const pendientes = totalSesionesRequeridas - sesionesActuales.length;
+  // Solo se computan pendientes si hay una ejecucion activa con sesiones asignadas
+  const hayEjecucion = Boolean(infoActual && sesionesActuales.length > 0);
+  const pendientes = hayEjecucion ? Math.max(0, totalSesionesRequeridas - sesionesActuales.length) : 0;
+  const listaPendientes = (hayEjecucion && pendientes > 0 && Array.isArray(infoActual?.sesionesPendientesDetalle))
+    ? infoActual.sesionesPendientesDetalle
+    : [];
 
   // Filtrar sesiones del año seleccionado
+  const anoObj = ANOS_ACADEMICOS.find((a) => a.clave === anoSeleccionado);
   const sesionesDelAno = sesionesActuales.filter((s) => {
-    const anoObj = ANOS_ACADEMICOS.find((a) => a.clave === anoSeleccionado);
     return (
       s.grupo.includes(anoSeleccionado) ||
       (anoObj && s.grupoCodigo === anoObj.codigo)
+    );
+  });
+
+  // Filtrar sesiones pendientes exclusivas del año seleccionado (solo mostrar en el año del fallo)
+  const pendientesDelAno = listaPendientes.filter((p: any) => {
+    return (
+      (p.grupo && p.grupo.includes(anoSeleccionado)) ||
+      (anoObj && (p.grupoCodigo === anoObj.codigo || p.grupo?.includes(anoObj.nombre)))
     );
   });
 
@@ -101,6 +114,9 @@ export default function PantallaHorario({
               const cant = sesionesActuales.filter(
                 (s) => s.grupo.includes(ano.clave) || s.grupoCodigo === ano.codigo
               ).length;
+              const tieneFallo = listaPendientes.some(
+                (p: any) => (p.grupo && p.grupo.includes(ano.clave)) || p.grupoCodigo === ano.codigo
+              );
 
               return (
                 <button
@@ -116,7 +132,9 @@ export default function PantallaHorario({
                   <span>{ano.nombre}</span>
                   <span
                     className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                      activo ? "bg-white/20 text-white" : "bg-white text-slate-600"
+                      activo
+                        ? tieneFallo ? "bg-amber-400 text-slate-950 font-bold" : "bg-white/20 text-white"
+                        : tieneFallo ? "bg-amber-100 text-amber-900 font-bold border border-amber-200" : "bg-white text-slate-600"
                     }`}
                   >
                     {cant}
@@ -247,7 +265,7 @@ export default function PantallaHorario({
                     await alEjecutar(modo, {
                       pasoCuadriculaMinutos: pasoCuadricula,
                       jornadaInicioMinuto: 480,
-                      jornadaFinMinuto: 1080,
+                      jornadaFinMinuto: 900,
                     });
                     if (modo === "BACKTRACKING") setAlgoritmoActivo("BACKTRACKING");
                     if (modo === "GREEDY") setAlgoritmoActivo("GREEDY");
@@ -273,7 +291,9 @@ export default function PantallaHorario({
           <div>
             <span className="font-semibold text-slate-900 block">Restricciones Validadas</span>
             <span className="text-slate-500 text-[11px]">
-              {infoActual?.conflictos === 0
+              {!hayEjecucion
+                ? "Sin simulación activa. Esperando ejecución de algoritmo."
+                : infoActual?.conflictos === 0
                 ? "0 conflictos de docente, grupo o salón."
                 : `${infoActual?.conflictos ?? 0} conflicto(s) detectados.`}
             </span>
@@ -283,10 +303,16 @@ export default function PantallaHorario({
         <div className="bg-white rounded-2xl p-3.5 border border-slate-200/80 shadow-xs flex items-center gap-3">
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-              pendientes === 0 ? "bg-indigo-50 text-indigo-600" : "bg-amber-50 text-amber-600"
+              !hayEjecucion
+                ? "bg-slate-100 text-slate-500"
+                : pendientes === 0
+                ? "bg-indigo-50 text-indigo-600"
+                : "bg-amber-50 text-amber-600"
             }`}
           >
-            {pendientes === 0 ? (
+            {!hayEjecucion ? (
+              <IconoEjecucion className="w-4 h-4" />
+            ) : pendientes === 0 ? (
               <IconoCheck className="w-4 h-4" />
             ) : (
               <IconoAlerta className="w-4 h-4" />
@@ -295,94 +321,74 @@ export default function PantallaHorario({
           <div>
             <span className="font-semibold text-slate-900 block">Cobertura de Clases</span>
             <span className="text-slate-500 text-[11px]">
-              {pendientes === 0
+              {!hayEjecucion
+                ? `Horario listo para planificar (${totalSesionesRequeridas} sesiones requeridas).`
+                : pendientes === 0
                 ? `100% asignado (${sesionesActuales.length} de ${totalSesionesRequeridas} sesiones).`
-                : `${pendientes} sesión pendiente por óptimo local de Greedy.`}
+                : `${pendientes} ${pendientes === 1 ? "sesión pendiente" : "sesiones pendientes"} en Greedy.`}
             </span>
-            {pendientes > 0 && infoActual?.sesionesPendientesDetalle?.[0] && (
+            {hayEjecucion && pendientesDelAno.length > 0 && (
               <span className="text-[11px] font-bold text-amber-700 block mt-0.5">
-                Materia omitida: {infoActual.sesionesPendientesDetalle[0].asignatura} ({infoActual.sesionesPendientesDetalle[0].duracionMinutos} min)
+                Falta en {anoSeleccionado}: {pendientesDelAno.map((p: any) => p.asignatura).join(", ")}
               </span>
             )}
           </div>
         </div>
       </div>
 
-      {/* Panel Informativo de Sesiones no Asignadas (Óptimo Local de Greedy) */}
-      {pendientes > 0 && (
-        <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 shadow-xs space-y-2.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-amber-100 border border-amber-200 rounded-lg text-amber-800">
+      {/* Aviso Sencillo de Sesión no Asignada (Sólo visible en el año del fallo) */}
+      {hayEjecucion && pendientesDelAno.length > 0 && (
+        <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 shadow-xs space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/60 pb-2.5">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 bg-amber-100 text-amber-800 rounded-lg shrink-0">
                 <IconoAlerta className="w-4 h-4" />
               </div>
               <div>
                 <span className="text-xs font-bold text-slate-900 block">
-                  Detalle de Sesión No Asignada ({pendientes} {pendientes === 1 ? "sesión pendiente" : "sesiones pendientes"})
+                  {pendientesDelAno.length === 1
+                    ? `1 sesión no asignada en ${anoSeleccionado}`
+                    : `${pendientesDelAno.length} sesiones no asignadas en ${anoSeleccionado}`}
                 </span>
-                <span className="text-[11px] text-slate-600">
-                  Greedy se bloqueó en un óptimo local debido a cuellos de botella con docentes compartidos.
+                <span className="text-[11px] text-slate-500">
+                  Greedy alcanzó un óptimo local por cuellos de botella con docentes compartidos.
                 </span>
               </div>
             </div>
-            <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-200 font-semibold px-2.5 py-0.5 rounded-full">
-              Límite de Heurística Ávida
+            <span className="text-[10px] font-semibold bg-white text-amber-800 border border-amber-200 px-2.5 py-1 rounded-full self-start sm:self-auto">
+              Heurística Ávida
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-            {(infoActual?.sesionesPendientesDetalle || [
-              {
-                id: "pend-1",
-                asignatura: "Sesión sin cupo en Greedy",
-                codigoMateria: "PENDIENTE",
-                docente: "Docente con cruce de horario",
-                grupo: "Grupo con solapamiento",
-                duracionMinutos: 120,
-                numeroSesion: 2,
-                motivo: "Sin franja horaria compatible entre docente y aula por decisión miope previa de Greedy.",
-              },
-            ]).map((p: any, idx: number) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            {pendientesDelAno.map((p: any, idx: number) => {
               const estilo = obtenerEstiloMateria(p.asignatura);
               return (
                 <div
                   key={p.id || idx}
-                  className="bg-white border border-amber-200 rounded-xl p-3 shadow-xs space-y-2 text-xs"
+                  className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-2xs space-y-2 text-xs"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-2.5 h-2.5 rounded-full ${estilo.dot}`} />
-                      <span className="font-bold text-slate-900">{p.asignatura}</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${estilo.dot}`} />
+                      <span className="font-bold text-slate-900 truncate">{p.asignatura}</span>
                     </div>
-                    <span className="text-[10px] font-mono font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md border border-slate-200">
+                    <span className="text-[10px] font-mono font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md border border-slate-200 shrink-0">
                       {p.codigoMateria}
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">Docente:</span>
-                      <span className="font-semibold text-slate-800">{p.docente}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">Año Académico:</span>
-                      <span className="font-semibold text-slate-800">{p.grupo}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">Sesión Requerida:</span>
-                      <span className="font-semibold text-slate-800">
-                        Sesión {p.numeroSesion} ({p.duracionMinutos} min)
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">Resultado Greedy:</span>
-                      <span className="font-bold text-amber-700">Sin espacio libre</span>
-                    </div>
+                  <div className="flex items-center justify-between text-[11px] text-slate-600 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+                    <span className="text-slate-700 font-medium truncate">{p.docente}</span>
+                    <span className="text-slate-500 font-mono text-[10px] shrink-0">
+                      Sesión {p.numeroSesion ?? 2} ({p.duracionMinutos}m)
+                    </span>
                   </div>
 
-                  <p className="text-[11px] text-slate-600 leading-relaxed">
-                    <strong className="text-slate-800">Causa:</strong> {p.motivo}
-                  </p>
+                  <div className="flex items-center justify-between text-[11px] pt-0.5">
+                    <span className="text-slate-500 text-[10px]">Resultado Greedy:</span>
+                    <span className="font-semibold text-amber-700 text-[10px]">Sin espacio libre</span>
+                  </div>
                 </div>
               );
             })}
@@ -434,7 +440,11 @@ export default function PantallaHorario({
       </div>
 
       {/* Calendario Semanal */}
-      <CalendarioSemanal sesiones={sesionesDelAno} />
+      <CalendarioSemanal
+        sesiones={sesionesDelAno}
+        jornadaInicioMinuto={480}
+        jornadaFinMinuto={900}
+      />
     </div>
   );
 }

@@ -173,43 +173,142 @@ function mezclar<T>(arr: T[]): T[] {
 }
 
 /**
- * Generador no lineal de disponibilidades para los 11 docentes.
- * Produce combinaciones asimetricas y realistas en cada ejecucion:
- * - 4 docentes compartidos con franjas ajustadas y choques potenciales.
- * - Docentes con turnos de manana, tarde o franjas cruzadas.
+ * Generador no lineal y dinamico de disponibilidades para los 11 docentes.
+ * Produce combinaciones aleatorias y asimetricas en cada ejecucion:
+ * - 4 patrones semanales rotativos (A, B, C, D) con desplazamientos horarios aleatorios.
+ * - 4 docentes compartidos con franjas ajustadas (300m) que fuerzan a Greedy a un optimo local.
+ * - Horario universitario matutino: ESTRICTAMENTE de 08:00 (480) a 15:00 (900) maximo.
+ * - Cobertura equilibrada de lunes a viernes en los 3 anos sin dias en blanco.
  */
 function generarDisponibilidadesNoLineales(): DocenteEscenario[] {
   const profesoresMezclados = mezclar(BANCO_PROFESORES).slice(0, 11);
+  const patronId = Math.floor(Math.random() * 4);
+  const shift = (idx: number) => ((idx + Math.floor(Math.random() * 5)) % 2 === 0 ? 0 : 60);
 
-  // Variaciones de patrones de disponibilidad que rotan en cada ejecucion
-  // Garantizan cobertura en los 5 dias de la semana (Lunes a Viernes) en los 3 anos sin dejar ningun dia vacio
-  const variacionesSemanales: FranjaHoraria[][] = [
-    // Docente 0 (INF-101 1° e INF-201 2°): Lun 8-14 (480-840), Jue 8-14 (480-840)
-    [{ dia: 1, inicio: 480, fin: 840 }, { dia: 4, inicio: 480, fin: 840 }],
-    // Docente 1 (MAT-101 1° y MAT-201 2°): Mar 8-14 (480-840), Vie 8-14 (480-840)
-    [{ dia: 2, inicio: 480, fin: 840 }, { dia: 5, inicio: 480, fin: 840 }],
-    // Docente 2 (MAT-102 1°): Lun 11-17 (660-1020), Mie 8-14 (480-840)
-    [{ dia: 1, inicio: 660, fin: 1020 }, { dia: 3, inicio: 480, fin: 840 }],
-    // Docente 3 (INF-102 1°): Mie 11-17 (660-1020), Jue 14-18 (840-1080)
-    [{ dia: 3, inicio: 660, fin: 1020 }, { dia: 4, inicio: 840, fin: 1080 }],
-    // Docente 4 (FIS-101 1°): Mar 14-18 (840-1080), Vie 8-12 (480-720)
-    [{ dia: 2, inicio: 840, fin: 1020 }, { dia: 5, inicio: 480, fin: 720 }],
-    // Docente 5 (INF-202 2° e INF-303 3°): Lun 11-17 (660-1020), Mie 8-14 (480-840), Vie 14-18 (840-1080)
-    [{ dia: 1, inicio: 660, fin: 1020 }, { dia: 3, inicio: 480, fin: 840 }, { dia: 5, inicio: 840, fin: 1080 }],
-    // Docente 6 (INF-203 2° e INF-304 3°): Mar 11-17 (660-1020), Jue 11-17 (660-1020)
-    [{ dia: 2, inicio: 660, fin: 1020 }, { dia: 4, inicio: 660, fin: 1020 }],
-    // Docente 7 (INF-204 2°): Mie 11-17 (660-1020), Vie 11-17 (660-1020)
-    [{ dia: 3, inicio: 660, fin: 1020 }, { dia: 5, inicio: 660, fin: 1020 }],
-    // Docente 8 (INF-301 3°): Lun 8-14 (480-840), Jue 8-14 (480-840)
-    [{ dia: 1, inicio: 480, fin: 840 }, { dia: 4, inicio: 480, fin: 840 }],
-    // Docente 9 (INF-302 3°): Mar 8-14 (480-840), Vie 8-14 (480-840)
-    [{ dia: 2, inicio: 480, fin: 840 }, { dia: 5, inicio: 480, fin: 840 }],
-    // Docente 10 (INF-305 3°): Mie 11-17 (660-1020), Vie 11-17 (660-1020)
-    [{ dia: 3, inicio: 660, fin: 1020 }, { dia: 5, inicio: 660, fin: 1020 }],
-  ];
+  let matrizBase: { doc: number; dia: number; ini: number; fin: number }[] = [];
+
+  if (patronId === 0) {
+    // Patron A: Docente 0 (Lun/Jue), Docente 1 (Mar/Vie), Docente 5 (Lun/Mie/Vie), Docente 6 (Mar/Jue)
+    matrizBase = [
+      { doc: 0, dia: 1, ini: 480, fin: 780 },
+      { doc: 0, dia: 4, ini: 480, fin: 780 },
+      { doc: 1, dia: 2, ini: 480, fin: 780 },
+      { doc: 1, dia: 5, ini: 480, fin: 780 },
+      { doc: 2, dia: 1, ini: 480 + shift(2), fin: 840 + shift(2) },
+      { doc: 2, dia: 3, ini: 480, fin: 780 },
+      { doc: 3, dia: 3, ini: 480, fin: 840 },
+      { doc: 3, dia: 4, ini: 480 + shift(3), fin: 840 + shift(3) },
+      { doc: 4, dia: 2, ini: 480 + shift(4), fin: 840 + shift(4) },
+      { doc: 4, dia: 5, ini: 480, fin: 840 },
+      { doc: 5, dia: 1, ini: 540, fin: 900 },
+      { doc: 5, dia: 3, ini: 480, fin: 780 },
+      { doc: 5, dia: 5, ini: 480, fin: 780 },
+      { doc: 6, dia: 2, ini: 480, fin: 840 },
+      { doc: 6, dia: 4, ini: 480, fin: 780 },
+      { doc: 7, dia: 3, ini: 480 + shift(7), fin: 840 + shift(7) },
+      { doc: 7, dia: 5, ini: 540, fin: 900 },
+      { doc: 8, dia: 1, ini: 480, fin: 840 },
+      { doc: 8, dia: 4, ini: 480, fin: 840 },
+      { doc: 9, dia: 2, ini: 480, fin: 840 },
+      { doc: 9, dia: 5, ini: 480, fin: 840 },
+      { doc: 10, dia: 3, ini: 480, fin: 840 },
+      { doc: 10, dia: 5, ini: 480, fin: 840 },
+    ];
+  } else if (patronId === 1) {
+    // Patron B: Docente 0 (Mar/Vie), Docente 1 (Lun/Jue), Docente 5 (Mar/Mie/Jue), Docente 6 (Lun/Vie)
+    matrizBase = [
+      { doc: 0, dia: 2, ini: 480, fin: 780 },
+      { doc: 0, dia: 5, ini: 480, fin: 780 },
+      { doc: 1, dia: 1, ini: 480, fin: 780 },
+      { doc: 1, dia: 4, ini: 480, fin: 780 },
+      { doc: 2, dia: 2, ini: 480 + shift(2), fin: 840 + shift(2) },
+      { doc: 2, dia: 4, ini: 480, fin: 780 },
+      { doc: 3, dia: 1, ini: 480, fin: 840 },
+      { doc: 3, dia: 3, ini: 480 + shift(3), fin: 840 + shift(3) },
+      { doc: 4, dia: 3, ini: 480 + shift(4), fin: 840 + shift(4) },
+      { doc: 4, dia: 5, ini: 480, fin: 840 },
+      { doc: 5, dia: 2, ini: 540, fin: 900 },
+      { doc: 5, dia: 3, ini: 480, fin: 780 },
+      { doc: 5, dia: 4, ini: 480, fin: 780 },
+      { doc: 6, dia: 1, ini: 480, fin: 840 },
+      { doc: 6, dia: 5, ini: 480, fin: 780 },
+      { doc: 7, dia: 1, ini: 480 + shift(7), fin: 840 + shift(7) },
+      { doc: 7, dia: 4, ini: 540, fin: 900 },
+      { doc: 8, dia: 2, ini: 480, fin: 840 },
+      { doc: 8, dia: 5, ini: 480, fin: 840 },
+      { doc: 9, dia: 1, ini: 480, fin: 840 },
+      { doc: 9, dia: 4, ini: 480, fin: 840 },
+      { doc: 10, dia: 3, ini: 480, fin: 840 },
+      { doc: 10, dia: 5, ini: 480, fin: 840 },
+    ];
+  } else if (patronId === 2) {
+    // Patron C: Permutacion armonica con cuellos de botella inter-anuales calibrados
+    matrizBase = [
+      { doc: 0, dia: 3, ini: 480, fin: 780 },
+      { doc: 0, dia: 5, ini: 480, fin: 780 },
+      { doc: 1, dia: 1, ini: 480, fin: 780 },
+      { doc: 1, dia: 2, ini: 480, fin: 780 },
+      { doc: 2, dia: 3, ini: 480 + shift(2), fin: 840 + shift(2) },
+      { doc: 2, dia: 4, ini: 480, fin: 780 },
+      { doc: 3, dia: 4, ini: 480, fin: 840 },
+      { doc: 3, dia: 5, ini: 480 + shift(3), fin: 840 + shift(3) },
+      { doc: 4, dia: 1, ini: 480 + shift(4), fin: 840 + shift(4) },
+      { doc: 4, dia: 2, ini: 480, fin: 840 },
+      { doc: 5, dia: 3, ini: 540, fin: 900 },
+      { doc: 5, dia: 4, ini: 480, fin: 780 },
+      { doc: 5, dia: 2, ini: 480, fin: 780 },
+      { doc: 6, dia: 1, ini: 480, fin: 840 },
+      { doc: 6, dia: 5, ini: 480, fin: 780 },
+      { doc: 7, dia: 4, ini: 480 + shift(7), fin: 840 + shift(7) },
+      { doc: 7, dia: 2, ini: 540, fin: 900 },
+      { doc: 8, dia: 3, ini: 480, fin: 840 },
+      { doc: 8, dia: 5, ini: 480, fin: 840 },
+      { doc: 9, dia: 1, ini: 480, fin: 840 },
+      { doc: 9, dia: 2, ini: 480, fin: 840 },
+      { doc: 10, dia: 4, ini: 480, fin: 840 },
+      { doc: 10, dia: 2, ini: 480, fin: 840 },
+    ];
+  } else {
+    // Patron D: Docente 0 (Mie/Vie), Docente 1 (Mar/Jue), Docente 5 (Mie/Jue/Vie), Docente 6 (Lun/Mar)
+    matrizBase = [
+      { doc: 0, dia: 3, ini: 480, fin: 780 },
+      { doc: 0, dia: 5, ini: 480, fin: 780 },
+      { doc: 1, dia: 2, ini: 480, fin: 780 },
+      { doc: 1, dia: 4, ini: 480, fin: 780 },
+      { doc: 2, dia: 1, ini: 480 + shift(2), fin: 840 + shift(2) },
+      { doc: 2, dia: 4, ini: 480, fin: 780 },
+      { doc: 3, dia: 1, ini: 480, fin: 840 },
+      { doc: 3, dia: 5, ini: 480 + shift(3), fin: 840 + shift(3) },
+      { doc: 4, dia: 2, ini: 480 + shift(4), fin: 840 + shift(4) },
+      { doc: 4, dia: 3, ini: 480, fin: 840 },
+      { doc: 5, dia: 3, ini: 540, fin: 900 },
+      { doc: 5, dia: 4, ini: 480, fin: 780 },
+      { doc: 5, dia: 5, ini: 480, fin: 780 },
+      { doc: 6, dia: 1, ini: 480, fin: 840 },
+      { doc: 6, dia: 2, ini: 480, fin: 780 },
+      { doc: 7, dia: 3, ini: 480 + shift(7), fin: 840 + shift(7) },
+      { doc: 7, dia: 5, ini: 540, fin: 900 },
+      { doc: 8, dia: 3, ini: 480, fin: 840 },
+      { doc: 8, dia: 5, ini: 480, fin: 840 },
+      { doc: 9, dia: 2, ini: 480, fin: 840 },
+      { doc: 9, dia: 4, ini: 480, fin: 840 },
+      { doc: 10, dia: 1, ini: 480, fin: 840 },
+      { doc: 10, dia: 4, ini: 480, fin: 840 },
+    ];
+  }
+
+  // Agrupar franjas por indice de docente
+  const mapaPorDocente: FranjaHoraria[][] = Array.from({ length: 11 }, () => []);
+  for (const item of matrizBase) {
+    mapaPorDocente[item.doc].push({
+      dia: item.dia,
+      inicio: Math.max(480, Math.min(item.ini, 780)),
+      fin: Math.min(900, Math.max(item.fin, item.ini + 120)),
+    });
+  }
 
   return profesoresMezclados.map((p, idx) => {
-    const patronBase = variacionesSemanales[idx];
+    const patronBase = mapaPorDocente[idx];
     const email = `${p.fn.toLowerCase()}.${p.ln.toLowerCase()}${Math.floor(Math.random() * 90 + 10)}@uni.edu`;
 
     return {
@@ -234,20 +333,22 @@ Genera una configuracion de 11 docentes universitarios y sus disponibilidades se
 
 REGLAS OBLIGATORIAS:
 1. Exactamente 11 docentes (nombres hispanos reales, apellidos y correos universitarios).
-2. DISTRIBUCION TOTAL EN LOS 5 DIAS DE LA SEMANA (LUNES A VIERNES):
+2. HORARIO ACADEMICO REAL DE 08:00 A 15:00 (MINUTOS 480 A 900 MAXIMO):
+   - Es ESTRICTAMENTE OBLIGATORIO que TODAS las franjas horarias esten comprendidas entre las 08:00 (480) y las 15:00 (900). NINGUNA franja puede empezar antes de 480 ni terminar despues de 900.
+   - Franjas validas: 480 a 780 (08:00-13:00, 300 min), 480 a 840 (08:00-14:00, 360 min), 540 a 900 (09:00-15:00, 360 min).
+3. DISTRIBUCION TOTAL EN LOS 5 DIAS DE LA SEMANA (LUNES A VIERNES):
    - Es ESTRICTAMENTE OBLIGATORIO que los 5 dias (1=Lunes, 2=Martes, 3=Miercoles, 4=Jueves, 5=Viernes) se utilicen activamente. NO PUEDE QUEDAR NINGUN DIA DE LA SEMANA EN BLANCO NI SIN CLASES en ninguno de los 3 anos.
-   - Cada uno de los 11 docentes DEBE tener disponibilidad en al menos 4 de los 5 dias de la semana (o los 5 dias), con franjas variadas de manana (480=08:00 a 780=13:00) y de tarde (840=14:00 a 1080=18:00).
-   - En cada dia de la semana (Lunes a Viernes) debe haber multiples profesores disponibles para permitir que el algoritmo distribuya armoniosamente las clases a lo largo de los 5 dias.
-3. CUELLOS DE BOTELLA Y RESTRICCIONES CRUZADAS:
+   - Cada uno de los 11 docentes DEBE tener disponibilidad en al menos 2 a 3 dias bien distribuidos (Lunes a Viernes).
+4. CUELLOS DE BOTELLA Y RESTRICCIONES CRUZADAS:
    - 4 de los docentes tienen materias compartidas inter-anuales (Docente 0 entre 1° y 2° ano, Docente 1 entre 1° y 2° ano, Docente 5 entre 2° y 3° ano, Docente 6 entre 2° y 3° ano).
    - Sus franjas horarias deben provocar que el algoritmo voraz Greedy tome decisiones miopes tempranas y se quede bloqueado en un optimo local (dejando 1 sesion sin cupo), mientras que Backtracking sea capaz de explorar y retroceder hasta ubicar el 100% de las 29 sesiones.
-4. "titulo": Titulo tecnico formal del escenario (sin emojis).
-5. "descripcion": Breve descripcion del reto de programacion generado (sin emojis).
+5. "titulo": Titulo tecnico formal del escenario (sin emojis).
+6. "descripcion": Breve descripcion del reto de programacion generado (sin emojis).
 
 Responde EXCLUSIVAMENTE con un JSON valido con esta estructura:
 {
-  "titulo": "Semestre con cobertura completa de lunes a viernes y restricciones cruzadas",
-  "descripcion": "Escenario academico con disponibilidad en los cinco dias de la semana y cuatro docentes compartidos entre anos.",
+  "titulo": "Semestre academico 08:00-15:00 con restricciones cruzadas y cobertura semanal completa",
+  "descripcion": "Horario universitario matutino con cuatro docentes compartidos entre anos y franjas ajustadas.",
   "docentes": [
     {
       "first_name": "Carlos",
@@ -255,10 +356,7 @@ Responde EXCLUSIVAMENTE con un JSON valido con esta estructura:
       "email": "carlos.perez@uni.edu",
       "disponibilidad": [
         { "dia": 1, "inicio": 480, "fin": 780 },
-        { "dia": 2, "inicio": 840, "fin": 1080 },
-        { "dia": 3, "inicio": 480, "fin": 780 },
-        { "dia": 4, "inicio": 840, "fin": 1080 },
-        { "dia": 5, "inicio": 480, "fin": 720 }
+        { "dia": 4, "inicio": 480, "fin": 780 }
       ]
     }
   ]
@@ -298,16 +396,15 @@ Responde EXCLUSIVAMENTE con un JSON valido con esta estructura:
       throw new Error("Estructura de docentes incompleta en respuesta de DeepSeek");
     }
 
-    const docentesLimpios: DocenteEscenario[] = parsed.docentes.slice(0, 11).map((d: any, idx: number) => {
-      const dispValida: FranjaHoraria[] = Array.isArray(d.disponibilidad) && d.disponibilidad.length > 0
-        ? d.disponibilidad
-        : [{ dia: (idx % 5) + 1, inicio: 480, fin: 780 }, { dia: ((idx + 2) % 5) + 1, inicio: 780, fin: 1080 }];
+    const docentesBase = generarDisponibilidadesNoLineales();
 
+    const docentesLimpios: DocenteEscenario[] = parsed.docentes.slice(0, 11).map((d: any, idx: number) => {
+      const pBase = docentesBase[idx];
       return {
-        first_name: d.first_name || `Docente${idx + 1}`,
-        last_name: d.last_name || `Apellido${idx + 1}`,
-        email: d.email || `docente${idx + 1}@uni.edu`,
-        disponibilidad: dispValida,
+        first_name: d.first_name || pBase.first_name,
+        last_name: d.last_name || pBase.last_name,
+        email: d.email || pBase.email,
+        disponibilidad: pBase.disponibilidad,
       };
     });
 
@@ -437,26 +534,26 @@ export async function generarYGuardarNuevoEscenario(periodoIdDeseado?: number) {
   // Docente 1: MAT-101 (1°) y MAT-201 (2°)
   // Docente 5: INF-202 (2°) e INF-304 (3°)
   // Docente 6: INF-203 (2°) e INF-303 (3°)
-  const ordenDocentes = mezclar([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  // La asignacion directa de indices conserva la coherencia de dias y solapamientos
   const asignacionDocentePorMateria: number[] = [
     // 1° Ano (5 materias)
-    ordenDocentes[0],
-    ordenDocentes[1],
-    ordenDocentes[2],
-    ordenDocentes[3],
-    ordenDocentes[4],
+    0, // INF-101
+    1, // MAT-101
+    2, // MAT-102
+    3, // INF-102
+    4, // FIS-101
     // 2° Ano (5 materias)
-    ordenDocentes[0], // Compartido con 1°
-    ordenDocentes[1], // Compartido con 1°
-    ordenDocentes[5],
-    ordenDocentes[6],
-    ordenDocentes[7],
+    0, // INF-201 (Compartido con 1°)
+    1, // MAT-201 (Compartido con 1°)
+    5, // INF-202 (Compartido con 3°)
+    6, // INF-203 (Compartido con 3°)
+    7, // INF-204
     // 3° Ano (5 materias)
-    ordenDocentes[8],
-    ordenDocentes[9],
-    ordenDocentes[5], // Compartido con 2°
-    ordenDocentes[6], // Compartido con 2°
-    ordenDocentes[10],
+    8, // INF-301
+    9, // INF-302
+    6, // INF-303 (Compartido con 2°)
+    5, // INF-304 (Compartido con 2°)
+    10, // INF-305
   ];
 
   // 7. Insertar las 15 Materias canónicas de Ingenieria en Informatica (5 por cada ano)

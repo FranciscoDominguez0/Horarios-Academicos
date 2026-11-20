@@ -417,11 +417,11 @@ export default function PantallaDatosEntrada({
       let start_minute = 480;
       let end_minute = 780;
       if (franjaHoraria === "tarde") {
-        start_minute = 780;
-        end_minute = 1080;
+        start_minute = 660; // 11:00
+        end_minute = 900;   // 15:00
       } else if (franjaHoraria === "completo") {
-        start_minute = 480;
-        end_minute = 1080;
+        start_minute = 480; // 08:00
+        end_minute = 900;   // 15:00
       }
 
       const disponibilidadesCreadas = await Promise.all(

@@ -319,7 +319,7 @@ function calcularDisposicionEventos(sesiones: SesionCalendario[]): EventoPosicio
 export default function CalendarioSemanal({
   sesiones,
   jornadaInicioMinuto = 480, // 08:00
-  jornadaFinMinuto = 1080, // 18:00
+  jornadaFinMinuto = 900,   // 15:00 maximo
 }: PropiedadesCalendario) {
   const duracionTotalJornada = jornadaFinMinuto - jornadaInicioMinuto;
 
@@ -346,7 +346,7 @@ export default function CalendarioSemanal({
       </div>
 
       {/* Contenedor Cuadrícula de Tiempo */}
-      <div className="grid grid-cols-[82px_repeat(5,1fr)] relative h-[680px] bg-white overflow-y-auto">
+      <div className="grid grid-cols-[82px_repeat(5,1fr)] relative h-[560px] bg-white overflow-y-auto">
         {/* Regla de Horas Lateral */}
         <div className="relative border-r border-slate-100 select-none bg-slate-50/30">
           {horasGuia.map((min) => {

@@ -81,112 +81,114 @@ async function sembrarDatos(): Promise<void> {
     docentes.push(d);
   }
 
-  // 4. Disponibilidades Docentes Orgánicas (Mornings y Afternoons distribuidos en la semana)
-  // 480 = 08:00, 660 = 11:00, 720 = 12:00, 780 = 13:00, 840 = 14:00, 1020 = 17:00, 1080 = 18:00
+  // 4. Disponibilidades Docentes Orgánicas (Horario Real Universitario 08:00 a 15:00 maximo)
+  // 480 = 08:00, 540 = 09:00, 600 = 10:00, 660 = 11:00, 720 = 12:00, 780 = 13:00, 840 = 14:00, 900 = 15:00
 
-  // Carlos Pérez (1° y 2°): Lun 8-13 (480-780), Mié 14-18 (840-1080), Jue 8-12 (480-720)
+  // Carlos Pérez (1° y 2°): Lun 8-13 (480-780), Jue 8-13 (480-780) -> Ajustado (300m + 300m)
   for (const d of [
     { dia: 1, ini: 480, fin: 780 },
-    { dia: 3, ini: 840, fin: 1080 },
-    { dia: 4, ini: 480, fin: 720 },
+    { dia: 4, ini: 480, fin: 780 },
   ]) {
     await prisma.teacher_availability.create({
       data: { teacher_id: docentes[0].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
     });
   }
 
-  // María Gómez (1° y 2°): Lun 14-18 (840-1080), Mar 8-13 (480-780), Jue 14-18 (840-1080)
+  // María Gómez (1° y 2°): Mar 8-13 (480-780), Vie 8-13 (480-780) -> Ajustado
   for (const d of [
-    { dia: 1, ini: 840, fin: 1080 },
     { dia: 2, ini: 480, fin: 780 },
-    { dia: 4, ini: 840, fin: 1080 },
+    { dia: 5, ini: 480, fin: 780 },
   ]) {
     await prisma.teacher_availability.create({
       data: { teacher_id: docentes[1].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
     });
   }
 
-  // Roberto Silva (1°): Mar 14-17 (840-1020), Jue 9-12 (540-720)
+  // Roberto Silva (1°): Lun 8-14 (480-840), Mié 8-13 (480-780)
   for (const d of [
-    { dia: 2, ini: 840, fin: 1020 },
-    { dia: 4, ini: 540, fin: 720 },
+    { dia: 1, ini: 480, fin: 840 },
+    { dia: 3, ini: 480, fin: 780 },
   ]) {
     await prisma.teacher_availability.create({
       data: { teacher_id: docentes[2].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
     });
   }
 
-  // Laura Torres (1°): Mié 8-12 (480-720)
-  await prisma.teacher_availability.create({
-    data: { teacher_id: docentes[3].id, day_of_week: 3, start_minute: 480, end_minute: 720 },
-  });
-
-  // Felipe Ramos (1°): Mar 10-13 (600-780), Vie 8-12 (480-720)
+  // Laura Torres (1°): Mié 8-14 (480-840), Jue 8-14 (480-840)
   for (const d of [
-    { dia: 2, ini: 600, fin: 780 },
-    { dia: 5, ini: 480, fin: 720 },
+    { dia: 3, ini: 480, fin: 840 },
+    { dia: 4, ini: 480, fin: 840 },
+  ]) {
+    await prisma.teacher_availability.create({
+      data: { teacher_id: docentes[3].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
+    });
+  }
+
+  // Felipe Ramos (1°): Mar 8-14 (480-840), Vie 8-14 (480-840)
+  for (const d of [
+    { dia: 2, ini: 480, fin: 840 },
+    { dia: 5, ini: 480, fin: 840 },
   ]) {
     await prisma.teacher_availability.create({
       data: { teacher_id: docentes[4].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
     });
   }
 
-  // Diana Morales (2° y 3°): Lun 9-13 (540-780), Mié 8-13 (480-780), Vie 14-18 (840-1080)
+  // Diana Morales (2° y 3°): Lun 9-15 (540-900), Mié 8-13 (480-780), Vie 8-13 (480-780)
   for (const d of [
-    { dia: 1, ini: 540, fin: 780 },
+    { dia: 1, ini: 540, fin: 900 },
     { dia: 3, ini: 480, fin: 780 },
-    { dia: 5, ini: 840, fin: 1080 },
+    { dia: 5, ini: 480, fin: 780 },
   ]) {
     await prisma.teacher_availability.create({
       data: { teacher_id: docentes[5].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
     });
   }
 
-  // Andrés Castro (2° y 3°): Mar 8-13 (480-780), Jue 13-18 (780-1080), Vie 8-12 (480-720)
+  // Andrés Castro (2° y 3°): Mar 8-14 (480-840), Jue 8-13 (480-780)
   for (const d of [
-    { dia: 2, ini: 480, fin: 780 },
-    { dia: 4, ini: 780, fin: 1080 },
-    { dia: 5, ini: 480, fin: 720 },
+    { dia: 2, ini: 480, fin: 840 },
+    { dia: 4, ini: 480, fin: 780 },
   ]) {
     await prisma.teacher_availability.create({
       data: { teacher_id: docentes[6].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
     });
   }
 
-  // Elena Cruz (2°): Mié 13-17 (780-1020), Vie 10-14 (600-840)
+  // Elena Cruz (2°): Mié 8-14 (480-840), Vie 9-15 (540-900)
   for (const d of [
-    { dia: 3, ini: 780, fin: 1020 },
-    { dia: 5, ini: 600, fin: 840 },
+    { dia: 3, ini: 480, fin: 840 },
+    { dia: 5, ini: 540, fin: 900 },
   ]) {
     await prisma.teacher_availability.create({
       data: { teacher_id: docentes[7].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
     });
   }
 
-  // Juan Rodríguez (3°): Lun 8-13 (480-780), Mié 8-13 (480-780)
+  // Juan Rodríguez (3°): Lun 8-14 (480-840), Jue 8-14 (480-840)
   for (const d of [
-    { dia: 1, ini: 480, fin: 780 },
-    { dia: 3, ini: 480, fin: 780 },
+    { dia: 1, ini: 480, fin: 840 },
+    { dia: 4, ini: 480, fin: 840 },
   ]) {
     await prisma.teacher_availability.create({
       data: { teacher_id: docentes[8].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
     });
   }
 
-  // Sofía Mendoza (3°): Mar 13-17 (780-1020), Jue 8-12 (480-720)
+  // Sofía Mendoza (3°): Mar 8-14 (480-840), Vie 8-14 (480-840)
   for (const d of [
-    { dia: 2, ini: 780, fin: 1020 },
-    { dia: 4, ini: 480, fin: 720 },
+    { dia: 2, ini: 480, fin: 840 },
+    { dia: 5, ini: 480, fin: 840 },
   ]) {
     await prisma.teacher_availability.create({
       data: { teacher_id: docentes[9].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },
     });
   }
 
-  // Gabriel Vargas (3°): Lun 14-18 (840-1080), Vie 13-17 (780-1020)
+  // Gabriel Vargas (3°): Mié 8-14 (480-840), Vie 8-14 (480-840)
   for (const d of [
-    { dia: 1, ini: 840, fin: 1080 },
-    { dia: 5, ini: 780, fin: 1020 },
+    { dia: 3, ini: 480, fin: 840 },
+    { dia: 5, ini: 480, fin: 840 },
   ]) {
     await prisma.teacher_availability.create({
       data: { teacher_id: docentes[10].id, day_of_week: d.dia, start_minute: d.ini, end_minute: d.fin },

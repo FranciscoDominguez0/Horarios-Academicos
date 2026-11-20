@@ -23,6 +23,7 @@ export function generarSesionesProgramables(asignaciones: AsignacionAcademica[])
   for (const asignacion of asignaciones) {
     validarConsistenciaMinutos(asignacion);
 
+    let sesionIndex = 1;
     for (const requerimiento of asignacion.requerimientos) {
       for (let indice = 1; indice <= requerimiento.cantidad; indice++) {
         sesiones.push({
@@ -32,7 +33,7 @@ export function generarSesionesProgramables(asignaciones: AsignacionAcademica[])
           docenteId: asignacion.docenteId,
           grupoId: asignacion.grupoId,
           asignaturaId: asignacion.asignaturaId,
-          numeroSesion: indice,
+          numeroSesion: sesionIndex++,
           duracionMinutos: requerimiento.duracionMinutos,
         });
       }

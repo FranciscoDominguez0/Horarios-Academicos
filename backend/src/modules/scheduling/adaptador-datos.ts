@@ -74,10 +74,10 @@ export async function cargarEntradaDesdeBd(
 
   return {
     periodoId,
-    jornadaInicioMinuto: opciones?.jornadaInicioMinuto ?? 420,
-    jornadaFinMinuto: opciones?.jornadaFinMinuto ?? 1080,
+    jornadaInicioMinuto: opciones?.jornadaInicioMinuto ?? 480, // 08:00
+    jornadaFinMinuto: opciones?.jornadaFinMinuto ?? 900,   // 15:00 maximo
     diasPermitidos: opciones?.diasPermitidos ?? [1, 2, 3, 4, 5],
-    pasoCuadriculaMinutos: opciones?.pasoCuadriculaMinutos ?? 30,
+    pasoCuadriculaMinutos: opciones?.pasoCuadriculaMinutos ?? 60,
     asignaciones: asignacionesDominio,
     disponibilidades: disponibilidadesDominio,
   };

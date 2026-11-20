@@ -39,12 +39,15 @@ export function ejecutarPlanificacionGreedy(
   const sesiones = generarSesionesProgramables(entrada.asignaciones);
   const mapaCandidatos = generarMapaCandidatos(sesiones, entrada);
 
-  // Heurística MRV: ordenar primero las sesiones con menor cantidad de candidatos
+  // Heurística voraz: ordenar primero las sesiones con menor cantidad de candidatos (MRV)
+  // Con desempate por duración mayor y número de sesión
   const sesionesOrdenadas = [...sesiones].sort((a, b) => {
     contadorOps.total++;
     const cantA = mapaCandidatos.get(a.id)?.length ?? 0;
     const cantB = mapaCandidatos.get(b.id)?.length ?? 0;
-    return cantA - cantB;
+    if (cantA !== cantB) return cantA - cantB;
+    if (b.duracionMinutos !== a.duracionMinutos) return b.duracionMinutos - a.duracionMinutos;
+    return a.numeroSesion - b.numeroSesion;
   });
 
   const ocupacionDocentes = new Map<string, IntervaloTiempo[]>();

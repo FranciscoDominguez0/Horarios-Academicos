@@ -61,7 +61,7 @@ export function ejecutarPlanificacionBacktracking(
 ): ResultadoPlanificacion {
   const inicioReloj = performance.now();
   const limiteNodos = opciones?.limiteNodos ?? 500_000;
-  const limiteTiempoMs = opciones?.limiteTiempoMs ?? 5_000;
+  const limiteTiempoMs = opciones?.limiteTiempoMs ?? 8_000;
 
   const contadorOps = { total: 0 };
   let nodosVisitados = 0;
@@ -94,18 +94,25 @@ export function ejecutarPlanificacionBacktracking(
   }
 
   // Ordenar por heurística MRV (menor cantidad de candidatos primero)
+  // Con desempate por mayor duración (Degree Heuristic: bloques de 180 min primero para evitar fragmentación)
   const sesionesOrdenadas = [...sesiones].sort((a, b) => {
     contadorOps.total++;
     const cantA = mapaCandidatos.get(a.id)?.length ?? 0;
     const cantB = mapaCandidatos.get(b.id)?.length ?? 0;
-    return cantA - cantB;
+    if (cantA !== cantB) return cantA - cantB;
+    return b.duracionMinutos - a.duracionMinutos;
   });
 
   const ocupacionDocentes = new Map<string, IntervaloTiempo[]>();
   const ocupacionGrupos = new Map<string, IntervaloTiempo[]>();
   const horarioActual: SesionAsignada[] = [];
+  let mejorHorario: SesionAsignada[] = [];
 
   function resolver(indice: number): boolean {
+    if (horarioActual.length > mejorHorario.length) {
+      mejorHorario = [...horarioActual];
+    }
+
     if (indice === sesionesOrdenadas.length) {
       return true;
     }
@@ -163,7 +170,9 @@ export function ejecutarPlanificacionBacktracking(
     estado = "NO_SOLUTION";
   }
 
-  const sesionesAsignadas = exito ? [...horarioActual] : [];
+  const sesionesAsignadas = exito
+    ? [...horarioActual]
+    : (limiteAlcanzado && mejorHorario.length > 0 ? [...mejorHorario] : []);
   const sesionesPendientes = exito
     ? []
     : sesiones.filter((s) => !sesionesAsignadas.some((a) => a.sesion.id === s.id));
