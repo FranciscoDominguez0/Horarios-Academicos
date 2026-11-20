@@ -1,7 +1,16 @@
 "use client";
 
 import React from "react";
-import { IconoEjecucion, IconoCalendario, IconoCheck, IconoAlerta, IconoLibro, IconoProfesor, IconoEstudiante } from "./Iconos";
+import {
+  IconoEjecucion,
+  IconoCalendario,
+  IconoCheck,
+  IconoAlerta,
+  IconoLibro,
+  IconoProfesor,
+  IconoEstudiante,
+  IconoBasura,
+} from "./Iconos";
 
 interface PropiedadesDashboard {
   periodo: { id: number; name: string; status: string } | null;
@@ -11,6 +20,8 @@ interface PropiedadesDashboard {
   ultimaEjecucionGreedy: any | null;
   ultimaEjecucionBacktracking: any | null;
   onNavegar: (pantalla: string) => void;
+  onLimpiarResultados?: () => Promise<void>;
+  limpiandoResultados?: boolean;
 }
 
 export default function PantallaDashboard({
@@ -21,6 +32,8 @@ export default function PantallaDashboard({
   ultimaEjecucionGreedy,
   ultimaEjecucionBacktracking,
   onNavegar,
+  onLimpiarResultados,
+  limpiandoResultados = false,
 }: PropiedadesDashboard) {
   return (
     <div className="space-y-6">
@@ -35,17 +48,20 @@ export default function PantallaDashboard({
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {onLimpiarResultados && (
+            <button
+              onClick={onLimpiarResultados}
+              disabled={limpiandoResultados}
+              className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs disabled:opacity-50"
+            >
+              <IconoBasura className="w-3.5 h-3.5 text-rose-600" />
+              <span>{limpiandoResultados ? "Limpiando..." : "Limpiar Resultados"}</span>
+            </button>
+          )}
           <button
             onClick={() => onNavegar("horario")}
             className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs"
-          >
-            <IconoEjecucion className="w-3.5 h-3.5" />
-            <span>Ejecutar Algoritmos</span>
-          </button>
-          <button
-            onClick={() => onNavegar("horario")}
-            className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs"
           >
             <IconoCalendario className="w-3.5 h-3.5" />
             <span>Ver Horario</span>
@@ -63,7 +79,7 @@ export default function PantallaDashboard({
           <div className="text-2xl font-bold text-slate-900 mt-1">
             {totalAsignaciones}
           </div>
-          <p className="text-[11px] text-slate-500 mt-0.5">3 cohortes académicas</p>
+          <p className="text-[11px] text-slate-500 mt-0.5">3 años académicos (1°, 2° y 3°)</p>
         </div>
 
         <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs">

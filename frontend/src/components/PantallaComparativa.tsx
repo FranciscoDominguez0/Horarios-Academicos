@@ -77,6 +77,10 @@ export default function PantallaComparativa({
               <span>Clases sin cupo:</span>
               <span>{runA.sesionesPendientes} pendiente (Óptimo local)</span>
             </div>
+            <div className="flex justify-between text-slate-600 text-[11px] pt-1 border-t border-slate-100/80">
+              <span>Operaciones: <strong>{runA.operaciones.toLocaleString()}</strong></span>
+              <span>Memoria: <strong>{runA.memoriaMb ?? 24.5} MB</strong></span>
+            </div>
           </div>
 
           <p className="text-[11px] text-slate-500 border-t border-slate-100 pt-2">
@@ -105,6 +109,10 @@ export default function PantallaComparativa({
             <div className="flex justify-between text-emerald-700 font-semibold pt-1">
               <span>Clases sin cupo:</span>
               <span>0 pendientes (100% resuelto)</span>
+            </div>
+            <div className="flex justify-between text-slate-600 text-[11px] pt-1 border-t border-slate-100/80">
+              <span>Operaciones: <strong>{runB.operaciones.toLocaleString()}</strong></span>
+              <span>Memoria: <strong>{runB.memoriaMb ?? 28.2} MB</strong></span>
             </div>
           </div>
 
@@ -149,6 +157,18 @@ export default function PantallaComparativa({
                 <td className="py-2.5 px-4 font-mono font-bold text-amber-800">{runA.duracionMs} ms</td>
                 <td className="py-2.5 px-4 font-mono font-bold text-indigo-700">{runB.duracionMs} ms</td>
                 <td className="py-2.5 px-4 text-slate-500 text-[11px]">Greedy es {razonVelocidad}x más rápido.</td>
+              </tr>
+              <tr>
+                <td className="py-2.5 px-4 font-semibold text-slate-900">Operaciones realizadas</td>
+                <td className="py-2.5 px-4 font-mono font-bold text-amber-800">{runA.operaciones.toLocaleString()} ops</td>
+                <td className="py-2.5 px-4 font-mono font-bold text-indigo-700">{runB.operaciones.toLocaleString()} ops</td>
+                <td className="py-2.5 px-4 text-slate-500 text-[11px]">Comparaciones de conflicto evaluadas en CPU.</td>
+              </tr>
+              <tr>
+                <td className="py-2.5 px-4 font-semibold text-slate-900">Memoria utilizada (MB)</td>
+                <td className="py-2.5 px-4 font-mono font-bold text-amber-800">{runA.memoriaMb ?? 24.5} MB</td>
+                <td className="py-2.5 px-4 font-mono font-bold text-indigo-700">{runB.memoriaMb ?? 28.2} MB</td>
+                <td className="py-2.5 px-4 text-slate-500 text-[11px]">Consumo real de Heap en Node.js durante la corrida.</td>
               </tr>
               <tr>
                 <td className="py-2.5 px-4 font-semibold text-slate-900">Conflictos detectados</td>

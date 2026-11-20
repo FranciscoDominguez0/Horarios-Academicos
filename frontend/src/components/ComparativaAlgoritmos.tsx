@@ -7,6 +7,7 @@ export interface MetricasComparativa {
     algoritmo: string;
     duracionMs: number;
     operaciones: number;
+    memoriaMb: number;
     nodosVisitados: number;
     retrocesos: number;
     sesionesAsignadas: number;
@@ -17,6 +18,7 @@ export interface MetricasComparativa {
     algoritmo: string;
     duracionMs: number;
     operaciones: number;
+    memoriaMb: number;
     nodosVisitados: number;
     retrocesos: number;
     sesionesAsignadas: number;

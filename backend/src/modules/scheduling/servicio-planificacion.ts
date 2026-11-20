@@ -246,3 +246,25 @@ export async function listarEjecucionesDePeriodo(periodoId: number) {
     creadoEn: e.created_at,
   }));
 }
+
+export async function limpiarEjecucionesDePeriodo(periodoId: number): Promise<number> {
+  const runs = await prisma.schedule_runs.findMany({
+    where: { period_id: periodoId },
+    select: { id: true },
+  });
+
+  if (runs.length === 0) return 0;
+
+  const runIds = runs.map((r) => r.id);
+
+  await prisma.$transaction([
+    prisma.schedule_sessions.deleteMany({
+      where: { run_id: { in: runIds } },
+    }),
+    prisma.schedule_runs.deleteMany({
+      where: { id: { in: runIds } },
+    }),
+  ]);
+
+  return runIds.length;
+}

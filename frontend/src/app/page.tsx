@@ -255,6 +255,43 @@ export default function PaginaPrincipal() {
     }
   }
 
+  const [limpiandoResultados, setLimpiandoResultados] = useState(false);
+
+  async function manejarLimpiarResultados() {
+    if (!periodo) return;
+    if (
+      !window.confirm(
+        "¿Deseas limpiar los resultados de planificación para iniciar una simulación limpia? Las materias, docentes y asignaciones permanecerán intactos."
+      )
+    ) {
+      return;
+    }
+
+    setLimpiandoResultados(true);
+    try {
+      const resp = await fetch(`/api/scheduling/periods/${periodo.id}/runs`, {
+        method: "DELETE",
+      });
+      if (!resp.ok) {
+        throw new Error("No se pudieron eliminar los resultados de planificación.");
+      }
+
+      setIdGreedy(null);
+      setIdBacktracking(null);
+      setInfoGreedy(null);
+      setInfoBacktracking(null);
+      setSesionesGreedy([]);
+      setSesionesBacktracking([]);
+      setDatosComparativa(null);
+      setUltimoResumenEjecutado(null);
+      setMensajeEstado("Resultados de planificación eliminados. Listo para simular en clase.");
+    } catch (err: any) {
+      alert(err.message || "Error al limpiar resultados.");
+    } finally {
+      setLimpiandoResultados(false);
+    }
+  }
+
   const opcionesPrincipales = [
     {
       id: "dashboard",
@@ -265,7 +302,7 @@ export default function PaginaPrincipal() {
     {
       id: "horario",
       nombre: "Horario Semanal",
-      descripcion: "Distribución de clases asignadas por cohorte y horario semanal.",
+      descripcion: "Distribución de clases por año académico y horario semanal.",
       icono: IconoCalendario,
       badge: sesionesBacktracking.length > 0 ? `${sesionesBacktracking.length}` : undefined,
     },
@@ -281,7 +318,7 @@ export default function PaginaPrincipal() {
     {
       id: "entrada",
       nombre: "Datos de Entrada",
-      descripcion: "Catálogo de asignaturas, profesores asignados, cohortes por año y parámetros globales.",
+      descripcion: "Catálogo de asignaturas, docentes y años académicos.",
       icono: IconoDatosEntrada,
     },
   ];
@@ -419,6 +456,8 @@ export default function PaginaPrincipal() {
               ultimaEjecucionGreedy={infoGreedy}
               ultimaEjecucionBacktracking={infoBacktracking}
               onNavegar={(p) => setPantallaActiva(p as PantallaActiva)}
+              onLimpiarResultados={manejarLimpiarResultados}
+              limpiandoResultados={limpiandoResultados}
             />
           )}
 

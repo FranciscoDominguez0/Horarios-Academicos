@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import {
   ejecutarYGuardarPlanificacion,
+  limpiarEjecucionesDePeriodo,
   listarEjecucionesDePeriodo,
   obtenerEjecucionPorId,
   obtenerSesionesDeEjecucion,
@@ -110,5 +111,21 @@ enrutadorPlanificacion.get("/periods/:periodId/runs", async (req: Request, res: 
     res.json(lista);
   } catch (error: any) {
     res.status(500).json({ mensaje: error.message || "Error al listar ejecuciones del período." });
+  }
+});
+
+enrutadorPlanificacion.delete("/periods/:periodId/runs", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const periodoIdStr = obtenerParametroString(req.params.periodId);
+    const periodoId = parseInt(periodoIdStr, 10);
+    if (isNaN(periodoId)) {
+      res.status(400).json({ mensaje: "El parámetro 'periodId' debe ser un número entero." });
+      return;
+    }
+
+    const total = await limpiarEjecucionesDePeriodo(periodoId);
+    res.json({ mensaje: `Se eliminaron ${total} ejecuciones previas del período.`, total });
+  } catch (error: any) {
+    res.status(500).json({ mensaje: error.message || "Error al limpiar ejecuciones del período." });
   }
 });

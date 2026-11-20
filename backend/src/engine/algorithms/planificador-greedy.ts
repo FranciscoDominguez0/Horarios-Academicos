@@ -88,6 +88,7 @@ export function ejecutarPlanificacionGreedy(
 
   const finReloj = performance.now();
   const duracionMs = Number((finReloj - inicioReloj).toFixed(3));
+  const memoriaMb = Number((process.memoryUsage().heapUsed / (1024 * 1024)).toFixed(2));
   const completado = sesionesPendientes.length === 0;
   const validacion = validarHorario(sesionesAsignadas, entrada, sesiones.length);
 
@@ -100,6 +101,7 @@ export function ejecutarPlanificacionGreedy(
     metricas: {
       tiempoMs: duracionMs,
       operaciones: contadorOps.total,
+      memoriaMb,
     },
     validacion,
   };

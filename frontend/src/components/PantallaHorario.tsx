@@ -92,9 +92,9 @@ export default function PantallaHorario({
     <div className="space-y-5">
       {/* Barra de Filtros por Año, Conmutador y Botón Modal estilo SaaS */}
       <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        {/* Selector de Cohorte */}
+        {/* Selector de Año Académico */}
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-xs font-bold text-slate-800">Cohorte:</span>
+          <span className="text-xs font-bold text-slate-800">Año Académico:</span>
           <div className="flex items-center gap-1.5 flex-wrap">
             {ANOS_ACADEMICOS.map((ano) => {
               const activo = anoSeleccionado === ano.clave;
@@ -310,7 +310,7 @@ export default function PantallaHorario({
             Asignaturas de {anoSeleccionado} ({materiasDelAno.length})
           </span>
           <span className="text-[11px] text-slate-400 font-medium">
-            5 materias por cohorte
+            5 materias por año académico
           </span>
         </div>
 

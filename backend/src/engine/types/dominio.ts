@@ -78,6 +78,7 @@ export type EstadoPlanificacion = "COMPLETED" | "NO_SOLUTION" | "LIMIT_REACHED";
 export interface MetricasEjecucion {
   tiempoMs: number;
   operaciones: number;
+  memoriaMb: number;
   nodosVisitados?: number;
   retrocesos?: number;
 }

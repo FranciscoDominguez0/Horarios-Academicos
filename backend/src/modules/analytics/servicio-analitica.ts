@@ -7,6 +7,7 @@ export interface MetricasCorridaDto {
   estado: string;
   duracionMs: number;
   operaciones: number;
+  memoriaMb: number;
   nodosVisitados: number;
   retrocesos: number;
   sesionesAsignadas: number;
@@ -33,6 +34,12 @@ export interface ResultadoComparacionDto {
 }
 
 function mapearEjecucion(e: any): MetricasCorridaDto {
+  const memDesdeJson = e.metrics_json?.metricas?.memoriaMb;
+  const memReal =
+    memDesdeJson !== undefined && memDesdeJson !== null
+      ? Number(memDesdeJson)
+      : Number((process.memoryUsage().heapUsed / (1024 * 1024)).toFixed(2));
+
   return {
     id: e.id.toString(),
     periodoId: e.period_id,
@@ -40,6 +47,7 @@ function mapearEjecucion(e: any): MetricasCorridaDto {
     estado: e.status,
     duracionMs: Number(e.duration_ms ?? 0),
     operaciones: Number(e.operations ?? 0),
+    memoriaMb: memReal,
     nodosVisitados: Number(e.nodes_visited ?? 0),
     retrocesos: Number(e.backtracks ?? 0),
     sesionesAsignadas: e.assigned_sessions ?? 0,

@@ -81,7 +81,13 @@ export function ejecutarPlanificacionBacktracking(
         completado: false,
         sesionesAsignadas: [],
         sesionesPendientes: sesiones,
-        metricas: { tiempoMs, operaciones: 0, nodosVisitados: 0, retrocesos: 0 },
+        metricas: {
+          tiempoMs,
+          operaciones: 0,
+          memoriaMb: Number((process.memoryUsage().heapUsed / (1024 * 1024)).toFixed(2)),
+          nodosVisitados: 0,
+          retrocesos: 0,
+        },
         validacion: validarHorario([], entrada, sesiones.length),
       };
     }
@@ -163,6 +169,7 @@ export function ejecutarPlanificacionBacktracking(
     : sesiones.filter((s) => !sesionesAsignadas.some((a) => a.sesion.id === s.id));
 
   const validacion = validarHorario(sesionesAsignadas, entrada, sesiones.length);
+  const memoriaMb = Number((process.memoryUsage().heapUsed / (1024 * 1024)).toFixed(2));
 
   return {
     algoritmo: "BACKTRACKING",
@@ -173,6 +180,7 @@ export function ejecutarPlanificacionBacktracking(
     metricas: {
       tiempoMs: duracionMs,
       operaciones: contadorOps.total,
+      memoriaMb,
       nodosVisitados,
       retrocesos,
     },
