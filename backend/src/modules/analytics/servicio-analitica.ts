@@ -12,6 +12,7 @@ export interface MetricasCorridaDto {
   retrocesos: number;
   sesionesAsignadas: number;
   sesionesPendientes: number;
+  sesionesPendientesDetalle?: any[];
   conflictos: number;
   calidad: number;
   creadoEn: Date | null;
@@ -52,6 +53,7 @@ function mapearEjecucion(e: any): MetricasCorridaDto {
     retrocesos: Number(e.backtracks ?? 0),
     sesionesAsignadas: e.assigned_sessions ?? 0,
     sesionesPendientes: e.unassigned_sessions ?? 0,
+    sesionesPendientesDetalle: e.sesionesPendientesDetalle ?? (e.metrics_json?.sesionesPendientes || []),
     conflictos: e.conflicts_found ?? 0,
     calidad: Number(e.quality_score ?? 0),
     creadoEn: e.created_at,

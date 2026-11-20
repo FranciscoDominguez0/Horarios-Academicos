@@ -1,5 +1,10 @@
 
-import "dotenv/config";
+import dotenv from "dotenv";
+dotenv.config();
+if (!process.env.DATABASE_URL) {
+  dotenv.config({ path: "backend/.env" });
+}
+
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient } from "../generated/prisma/client";
 

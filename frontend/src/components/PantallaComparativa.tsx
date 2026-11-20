@@ -73,9 +73,16 @@ export default function PantallaComparativa({
             <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
               <div style={{ width: `${porcentajeA}%` }} className="bg-amber-500 h-full rounded-full"></div>
             </div>
-            <div className="flex justify-between text-amber-800 font-semibold pt-1">
+            <div className="flex justify-between items-start text-amber-800 font-semibold pt-1">
               <span>Clases sin cupo:</span>
-              <span>{runA.sesionesPendientes} pendiente (Óptimo local)</span>
+              <span className="text-right">
+                {runA.sesionesPendientes} pendiente (Óptimo local)
+                {runA.sesionesPendientesDetalle?.[0] && (
+                  <span className="block text-[10px] font-bold text-amber-950 mt-0.5">
+                    Falta: {runA.sesionesPendientesDetalle[0].asignatura}
+                  </span>
+                )}
+              </span>
             </div>
             <div className="flex justify-between text-slate-600 text-[11px] pt-1 border-t border-slate-100/80">
               <span>Operaciones: <strong>{runA.operaciones.toLocaleString()}</strong></span>
@@ -148,7 +155,14 @@ export default function PantallaComparativa({
               </tr>
               <tr>
                 <td className="py-2.5 px-4 font-semibold text-slate-900">Clases sin cupo</td>
-                <td className="py-2.5 px-4 font-semibold text-amber-800">{runA.sesionesPendientes} pendiente</td>
+                <td className="py-2.5 px-4 font-semibold text-amber-800">
+                  <span>{runA.sesionesPendientes} pendiente</span>
+                  {runA.sesionesPendientesDetalle?.[0] && (
+                    <span className="block text-[10px] font-bold text-amber-950">
+                      ({runA.sesionesPendientesDetalle[0].asignatura})
+                    </span>
+                  )}
+                </td>
                 <td className="py-2.5 px-4 font-semibold text-emerald-700">0 pendientes</td>
                 <td className="py-2.5 px-4 text-slate-500 text-[11px]">Greedy se queda atrapado en óptimo local.</td>
               </tr>

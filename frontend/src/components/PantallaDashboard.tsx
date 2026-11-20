@@ -10,6 +10,7 @@ import {
   IconoProfesor,
   IconoEstudiante,
   IconoBasura,
+  IconoVarita,
 } from "./Iconos";
 
 interface PropiedadesDashboard {
@@ -22,6 +23,9 @@ interface PropiedadesDashboard {
   onNavegar: (pantalla: string) => void;
   onLimpiarResultados?: () => Promise<void>;
   limpiandoResultados?: boolean;
+  onGenerarEscenario?: () => Promise<void>;
+  generandoEscenario?: boolean;
+  escenarioInfo?: { nombre: string; descripcion: string } | null;
 }
 
 export default function PantallaDashboard({
@@ -34,6 +38,9 @@ export default function PantallaDashboard({
   onNavegar,
   onLimpiarResultados,
   limpiandoResultados = false,
+  onGenerarEscenario,
+  generandoEscenario = false,
+  escenarioInfo,
 }: PropiedadesDashboard) {
   return (
     <div className="space-y-6">
@@ -48,17 +55,31 @@ export default function PantallaDashboard({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {onGenerarEscenario && (
+            <button
+              onClick={onGenerarEscenario}
+              disabled={generandoEscenario || limpiandoResultados}
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs disabled:opacity-50"
+              title="Genera un nuevo escenario con IA para Ingenieria en Informatica, limpiando resultados previos"
+            >
+              <IconoVarita className="w-3.5 h-3.5" />
+              <span>{generandoEscenario ? "Generando con IA..." : "Generar Escenario con IA"}</span>
+            </button>
+          )}
+
           {onLimpiarResultados && (
             <button
               onClick={onLimpiarResultados}
-              disabled={limpiandoResultados}
+              disabled={limpiandoResultados || generandoEscenario}
               className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs disabled:opacity-50"
+              title="Limpia solo los resultados calculados, manteniendo asignaturas y profesores"
             >
               <IconoBasura className="w-3.5 h-3.5 text-rose-600" />
               <span>{limpiandoResultados ? "Limpiando..." : "Limpiar Resultados"}</span>
             </button>
           )}
+
           <button
             onClick={() => onNavegar("horario")}
             className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs"

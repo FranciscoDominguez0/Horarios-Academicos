@@ -29,7 +29,15 @@ export default function PaginaPrincipal() {
 
   // Estado de las ejecuciones
   const [cargando, setCargando] = useState<boolean>(false);
-  const [mensajeEstado, setMensajeEstado] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => {
+      setToast(null);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   const [idGreedy, setIdGreedy] = useState<string | null>(null);
   const [idBacktracking, setIdBacktracking] = useState<string | null>(null);
@@ -167,25 +175,24 @@ export default function PaginaPrincipal() {
     }
   ) {
     if (!periodo) {
-      setMensajeEstado("No hay un período académico disponible.");
+      setToast("No hay un período académico disponible.");
       return;
     }
 
     setCargando(true);
-    const nombreModo =
+    setToast(
       modo === "GREEDY"
-        ? "Algoritmos voraces (Greedy)"
+        ? "Ejecutando Greedy..."
         : modo === "BACKTRACKING"
-        ? "Algoritmo de Retroceso (Backtracking)"
-        : "ambos algoritmos";
-    setMensajeEstado(`Iniciando planificación con ${nombreModo}...`);
+        ? "Ejecutando Backtracking..."
+        : "Ejecutando ambos algoritmos..."
+    );
 
     try {
       let nuevoIdGreedy = idGreedy;
       let nuevoIdBacktracking = idBacktracking;
 
       if (modo === "GREEDY" || modo === "AMBOS") {
-        setMensajeEstado("Ejecutando Algoritmos voraces (Greedy)...");
         const resp = await fetch("/api/scheduling/greedy", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -212,7 +219,6 @@ export default function PaginaPrincipal() {
       }
 
       if (modo === "BACKTRACKING" || modo === "AMBOS") {
-        setMensajeEstado("Ejecutando Algoritmo de Retroceso (Backtracking)...");
         const resp = await fetch("/api/scheduling/backtracking", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -247,15 +253,71 @@ export default function PaginaPrincipal() {
         }
       }
 
-      setMensajeEstado("Planificación finalizada y registrada con éxito.");
+      setToast("Planificación finalizada con éxito.");
     } catch (err: any) {
-      setMensajeEstado(`Error: ${err.message}`);
+      setToast(`Error: ${err.message}`);
     } finally {
       setCargando(false);
     }
   }
 
   const [limpiandoResultados, setLimpiandoResultados] = useState(false);
+  const [generandoEscenario, setGenerandoEscenario] = useState(false);
+  const [escenarioInfo, setEscenarioInfo] = useState<{ nombre: string; descripcion: string } | null>(null);
+
+  async function manejarGenerarEscenarioConIA() {
+    if (!periodo) return;
+    if (
+      !window.confirm(
+        "¿Deseas generar un nuevo escenario con IA? Se limpiarán los resultados y asignaciones actuales, y la IA estructurará un nuevo conjunto de disponibilidades y restricciones docentes para Ingeniería en Informática."
+      )
+    ) {
+      return;
+    }
+
+    setGenerandoEscenario(true);
+    setToast("Generando escenario con IA...");
+    try {
+      const resp = await fetch("/api/scenarios/generate-random", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ periodoId: periodo.id }),
+      });
+
+      if (!resp.ok) {
+        const errorData = await resp.json().catch(() => ({}));
+        throw new Error(errorData.mensaje || "No se pudo generar el nuevo escenario con IA.");
+      }
+
+      const datos = await resp.json();
+
+      // Guardar información del escenario activo
+      setEscenarioInfo({
+        nombre: datos.tema || "Escenario Académico",
+        descripcion: datos.descripcion || "Disponibilidad de docentes configurada por la IA.",
+      });
+
+      // Limpiar estados de ejecuciones previas para que el horario quede limpio
+      setIdGreedy(null);
+      setIdBacktracking(null);
+      setInfoGreedy(null);
+      setInfoBacktracking(null);
+      setSesionesGreedy([]);
+      setSesionesBacktracking([]);
+      setDatosComparativa(null);
+      setUltimoResumenEjecutado(null);
+
+      // Recargar catálogo de materias, docentes y asignaciones
+      await recargarAsignaciones();
+
+      setToast(datos.mensaje || "Escenario generado con éxito (15 materias).");
+    } catch (err: any) {
+      alert(err.message || "Error al generar nuevo escenario con IA.");
+      setToast(`Error: ${err.message}`);
+    } finally {
+      setGenerandoEscenario(false);
+    }
+  }
 
   async function manejarLimpiarResultados() {
     if (!periodo) return;
@@ -284,9 +346,10 @@ export default function PaginaPrincipal() {
       setSesionesBacktracking([]);
       setDatosComparativa(null);
       setUltimoResumenEjecutado(null);
-      setMensajeEstado("Resultados de planificación eliminados. Listo para simular en clase.");
+      setToast("Resultados limpiados con éxito.");
     } catch (err: any) {
       alert(err.message || "Error al limpiar resultados.");
+      setToast(`Error: ${err.message}`);
     } finally {
       setLimpiandoResultados(false);
     }
@@ -432,13 +495,15 @@ export default function PaginaPrincipal() {
           </div>
         </header>
 
-        {/* Notificación de Estado */}
-        {mensajeEstado && (
-          <div className="mx-6 md:mx-8 mt-4 p-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-mono text-slate-700 flex justify-between items-center shadow-xs shrink-0">
-            <span>{mensajeEstado}</span>
+        {/* Floating Toast Notification */}
+        {toast && (
+          <div className="fixed bottom-6 right-6 z-[999999] flex items-center gap-3 px-4 py-3 bg-slate-900 text-white rounded-2xl shadow-xl border border-slate-800 text-xs font-medium animate-in slide-in-from-bottom-3 duration-150">
+            <span>{toast}</span>
             <button
-              onClick={() => setMensajeEstado(null)}
-              className="text-slate-400 hover:text-slate-600 font-bold px-1"
+              type="button"
+              onClick={() => setToast(null)}
+              className="text-slate-400 hover:text-white p-0.5 transition-colors font-bold text-sm ml-1"
+              title="Cerrar"
             >
               ×
             </button>
@@ -458,6 +523,9 @@ export default function PaginaPrincipal() {
               onNavegar={(p) => setPantallaActiva(p as PantallaActiva)}
               onLimpiarResultados={manejarLimpiarResultados}
               limpiandoResultados={limpiandoResultados}
+              onGenerarEscenario={manejarGenerarEscenarioConIA}
+              generandoEscenario={generandoEscenario}
+              escenarioInfo={escenarioInfo}
             />
           )}
 

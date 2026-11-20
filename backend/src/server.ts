@@ -11,6 +11,7 @@ import { enrutadorGrupos } from "./modules/groups/rutas-grupos.js";
 import { enrutadorAsignaciones } from "./modules/assignments/rutas-asignaciones.js";
 import { enrutadorPlanificacion } from "./modules/scheduling/rutas-planificacion.js";
 import { enrutadorAnalitica } from "./modules/analytics/rutas-analitica.js";
+import { enrutadorEscenarios } from "./modules/scenarios/rutas-escenarios.js";
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use("/api/groups", enrutadorGrupos);
 app.use("/api/assignments", enrutadorAsignaciones);
 app.use("/api/scheduling", enrutadorPlanificacion);
 app.use("/api/analytics", enrutadorAnalitica);
+app.use("/api/scenarios", enrutadorEscenarios);
 
 app.get("/", (req, res) => {
     res.json({

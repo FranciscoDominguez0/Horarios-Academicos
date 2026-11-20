@@ -12,6 +12,7 @@ export interface MetricasComparativa {
     retrocesos: number;
     sesionesAsignadas: number;
     sesionesPendientes: number;
+    sesionesPendientesDetalle?: any[];
     conflictos: number;
   };
   runB: {
@@ -23,6 +24,7 @@ export interface MetricasComparativa {
     retrocesos: number;
     sesionesAsignadas: number;
     sesionesPendientes: number;
+    sesionesPendientesDetalle?: any[];
     conflictos: number;
   };
   algoritmoMasRapido: string;

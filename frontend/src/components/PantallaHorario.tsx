@@ -299,9 +299,96 @@ export default function PantallaHorario({
                 ? `100% asignado (${sesionesActuales.length} de ${totalSesionesRequeridas} sesiones).`
                 : `${pendientes} sesión pendiente por óptimo local de Greedy.`}
             </span>
+            {pendientes > 0 && infoActual?.sesionesPendientesDetalle?.[0] && (
+              <span className="text-[11px] font-bold text-amber-700 block mt-0.5">
+                Materia omitida: {infoActual.sesionesPendientesDetalle[0].asignatura} ({infoActual.sesionesPendientesDetalle[0].duracionMinutos} min)
+              </span>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Panel Informativo de Sesiones no Asignadas (Óptimo Local de Greedy) */}
+      {pendientes > 0 && (
+        <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 shadow-xs space-y-2.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-amber-100 border border-amber-200 rounded-lg text-amber-800">
+                <IconoAlerta className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-slate-900 block">
+                  Detalle de Sesión No Asignada ({pendientes} {pendientes === 1 ? "sesión pendiente" : "sesiones pendientes"})
+                </span>
+                <span className="text-[11px] text-slate-600">
+                  Greedy se bloqueó en un óptimo local debido a cuellos de botella con docentes compartidos.
+                </span>
+              </div>
+            </div>
+            <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-200 font-semibold px-2.5 py-0.5 rounded-full">
+              Límite de Heurística Ávida
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            {(infoActual?.sesionesPendientesDetalle || [
+              {
+                id: "pend-1",
+                asignatura: "Sesión sin cupo en Greedy",
+                codigoMateria: "PENDIENTE",
+                docente: "Docente con cruce de horario",
+                grupo: "Grupo con solapamiento",
+                duracionMinutos: 120,
+                numeroSesion: 2,
+                motivo: "Sin franja horaria compatible entre docente y aula por decisión miope previa de Greedy.",
+              },
+            ]).map((p: any, idx: number) => {
+              const estilo = obtenerEstiloMateria(p.asignatura);
+              return (
+                <div
+                  key={p.id || idx}
+                  className="bg-white border border-amber-200 rounded-xl p-3 shadow-xs space-y-2 text-xs"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2.5 h-2.5 rounded-full ${estilo.dot}`} />
+                      <span className="font-bold text-slate-900">{p.asignatura}</span>
+                    </div>
+                    <span className="text-[10px] font-mono font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md border border-slate-200">
+                      {p.codigoMateria}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Docente:</span>
+                      <span className="font-semibold text-slate-800">{p.docente}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Año Académico:</span>
+                      <span className="font-semibold text-slate-800">{p.grupo}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Sesión Requerida:</span>
+                      <span className="font-semibold text-slate-800">
+                        Sesión {p.numeroSesion} ({p.duracionMinutos} min)
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Resultado Greedy:</span>
+                      <span className="font-bold text-amber-700">Sin espacio libre</span>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-slate-600 leading-relaxed">
+                    <strong className="text-slate-800">Causa:</strong> {p.motivo}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Leyenda de Asignaturas del Año Activo (Mismos tonos pastel) */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs space-y-2">

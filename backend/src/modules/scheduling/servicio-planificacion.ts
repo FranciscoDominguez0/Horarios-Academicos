@@ -108,6 +108,51 @@ export async function ejecutarYGuardarPlanificacion(
   return { ejecucionId, resultado };
 }
 
+export interface SesionPendienteDetalle {
+  id: string;
+  asignatura: string;
+  codigoMateria: string;
+  docente: string;
+  docenteEmail: string;
+  grupo: string;
+  grupoCodigo: string;
+  numeroSesion: number;
+  duracionMinutos: number;
+  motivo: string;
+}
+
+export async function enriquecerSesionesPendientes(rawPendientes: any[]): Promise<SesionPendienteDetalle[]> {
+  if (!rawPendientes || rawPendientes.length === 0) return [];
+
+  const asignacionIds = [...new Set(rawPendientes.map((p: any) => p.asignacionId).filter(Boolean))] as number[];
+  const asignacionesBd = await prisma.course_assignments.findMany({
+    where: { id: { in: asignacionIds } },
+    include: {
+      subjects: true,
+      teachers: true,
+      student_groups: true,
+    },
+  });
+
+  const asigMap = new Map(asignacionesBd.map((a) => [a.id, a]));
+
+  return rawPendientes.map((p: any) => {
+    const a = asigMap.get(p.asignacionId);
+    return {
+      id: p.id || `pend-${p.asignacionId}-${p.numeroSesion}`,
+      asignatura: a?.subjects?.name || `Materia #${p.asignaturaId}`,
+      codigoMateria: a?.subjects?.code || "INF",
+      docente: a ? `${a.teachers.first_name} ${a.teachers.last_name}` : `Docente #${p.docenteId}`,
+      docenteEmail: a?.teachers?.email || "",
+      grupo: a?.student_groups?.name || `Grupo #${p.grupoId}`,
+      grupoCodigo: a?.student_groups?.code || "GRUPO",
+      numeroSesion: p.numeroSesion ?? 1,
+      duracionMinutos: p.duracionMinutos ?? 120,
+      motivo: "Sin franja horaria compatible libre de colision simultanea entre la disponibilidad docente, el horario del grupo y la disponibilidad de aulas (optimo local alcanzado por Greedy).",
+    };
+  });
+}
+
 export async function obtenerEjecucionPorId(idTexto: string) {
   const id = BigInt(idTexto);
   const ejecucion = await prisma.schedule_runs.findUnique({
@@ -118,6 +163,9 @@ export async function obtenerEjecucionPorId(idTexto: string) {
     return null;
   }
 
+  const rawPendientes = (ejecucion.metrics_json as any)?.sesionesPendientes || [];
+  const sesionesPendientesDetalle = await enriquecerSesionesPendientes(rawPendientes);
+
   return {
     id: ejecucion.id.toString(),
     periodoId: ejecucion.period_id,
@@ -125,10 +173,15 @@ export async function obtenerEjecucionPorId(idTexto: string) {
     estado: ejecucion.status,
     duracionMs: Number(ejecucion.duration_ms ?? 0),
     operaciones: Number(ejecucion.operations ?? 0),
+    memoriaMb:
+      (ejecucion.metrics_json as any)?.metricas?.memoriaMb !== undefined
+        ? Number((ejecucion.metrics_json as any).metricas.memoriaMb)
+        : Number((process.memoryUsage().heapUsed / (1024 * 1024)).toFixed(2)),
     nodosVisitados: Number(ejecucion.nodes_visited ?? 0),
     retrocesos: Number(ejecucion.backtracks ?? 0),
     sesionesAsignadas: ejecucion.assigned_sessions ?? 0,
     sesionesPendientes: ejecucion.unassigned_sessions ?? 0,
+    sesionesPendientesDetalle,
     conflictos: ejecucion.conflicts_found ?? 0,
     calidad: Number(ejecucion.quality_score ?? 0),
     iniciadoEn: ejecucion.started_at,
@@ -231,20 +284,32 @@ export async function listarEjecucionesDePeriodo(periodoId: number) {
     orderBy: { created_at: "desc" },
   });
 
-  return ejecuciones.map((e) => ({
-    id: e.id.toString(),
-    periodoId: e.period_id,
-    algoritmo: e.algorithm,
-    estado: e.status,
-    duracionMs: Number(e.duration_ms ?? 0),
-    operaciones: Number(e.operations ?? 0),
-    nodosVisitados: Number(e.nodes_visited ?? 0),
-    retrocesos: Number(e.backtracks ?? 0),
-    sesionesAsignadas: e.assigned_sessions ?? 0,
-    sesionesPendientes: e.unassigned_sessions ?? 0,
-    conflictos: e.conflicts_found ?? 0,
-    creadoEn: e.created_at,
-  }));
+  return Promise.all(
+    ejecuciones.map(async (e) => {
+      const rawPendientes = (e.metrics_json as any)?.sesionesPendientes || [];
+      const sesionesPendientesDetalle = await enriquecerSesionesPendientes(rawPendientes);
+
+      return {
+        id: e.id.toString(),
+        periodoId: e.period_id,
+        algoritmo: e.algorithm,
+        estado: e.status,
+        duracionMs: Number(e.duration_ms ?? 0),
+        operaciones: Number(e.operations ?? 0),
+        memoriaMb:
+          (e.metrics_json as any)?.metricas?.memoriaMb !== undefined
+            ? Number((e.metrics_json as any).metricas.memoriaMb)
+            : Number((process.memoryUsage().heapUsed / (1024 * 1024)).toFixed(2)),
+        nodosVisitados: Number(e.nodes_visited ?? 0),
+        retrocesos: Number(e.backtracks ?? 0),
+        sesionesAsignadas: e.assigned_sessions ?? 0,
+        sesionesPendientes: e.unassigned_sessions ?? 0,
+        sesionesPendientesDetalle,
+        conflictos: e.conflicts_found ?? 0,
+        creadoEn: e.created_at,
+      };
+    })
+  );
 }
 
 export async function limpiarEjecucionesDePeriodo(periodoId: number): Promise<number> {

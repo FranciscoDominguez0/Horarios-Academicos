@@ -157,17 +157,65 @@ export const ESTILOS_MATERIAS: Record<
   },
 };
 
+function normalizarTexto(texto: string): string {
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+const ESTILOS_NORMALIZADOS: Record<
+  string,
+  { bg: string; border: string; text: string; badge: string; dot: string }
+> = {};
+
+for (const [clave, estilo] of Object.entries(ESTILOS_MATERIAS)) {
+  ESTILOS_NORMALIZADOS[normalizarTexto(clave)] = estilo;
+}
+
+// Paleta pastel armónica de respaldo para garantizar que NINGUNA materia quede en gris
+const PALETA_FALLBACK = [
+  { bg: "bg-[#ece8fd]", border: "border-[#ded5f8]", text: "text-purple-950", badge: "bg-white/90 text-purple-900", dot: "bg-purple-500" },
+  { bg: "bg-[#ddf7e5]", border: "border-[#c2ecd0]", text: "text-emerald-950", badge: "bg-white/90 text-emerald-900", dot: "bg-emerald-500" },
+  { bg: "bg-[#e0f4fc]", border: "border-[#c6e7f7]", text: "text-sky-950", badge: "bg-white/90 text-sky-900", dot: "bg-sky-500" },
+  { bg: "bg-[#fde7df]", border: "border-[#f6d0c0]", text: "text-orange-950", badge: "bg-white/90 text-orange-900", dot: "bg-orange-500" },
+  { bg: "bg-[#fef3d6]", border: "border-[#f7e3ad]", text: "text-amber-950", badge: "bg-white/90 text-amber-900", dot: "bg-amber-500" },
+  { bg: "bg-[#e2ecfe]", border: "border-[#ccdeff]", text: "text-blue-950", badge: "bg-white/90 text-blue-900", dot: "bg-blue-600" },
+  { bg: "bg-[#dcfce7]", border: "border-[#bbf7d0]", text: "text-teal-950", badge: "bg-white/90 text-teal-900", dot: "bg-teal-500" },
+  { bg: "bg-[#ffedd5]", border: "border-[#fed7aa]", text: "text-orange-950", badge: "bg-white/90 text-orange-900", dot: "bg-orange-500" },
+  { bg: "bg-[#ede9fe]", border: "border-[#ddd6fe]", text: "text-violet-950", badge: "bg-white/90 text-violet-900", dot: "bg-violet-500" },
+  { bg: "bg-[#fce7f3]", border: "border-[#fbcfe8]", text: "text-pink-950", badge: "bg-white/90 text-pink-900", dot: "bg-pink-500" },
+];
+
 export function obtenerEstiloMateria(asignatura: string) {
+  if (!asignatura) return PALETA_FALLBACK[0];
+
+  // 1. Coincidencia directa exacta
   if (ESTILOS_MATERIAS[asignatura]) {
     return ESTILOS_MATERIAS[asignatura];
   }
-  return {
-    bg: "bg-slate-100",
-    border: "border-slate-200",
-    text: "text-slate-900",
-    badge: "bg-white text-slate-800",
-    dot: "bg-slate-400",
-  };
+
+  // 2. Coincidencia normalizada (ignora tildes, mayúsculas y símbolos)
+  const norm = normalizarTexto(asignatura);
+  if (ESTILOS_NORMALIZADOS[norm]) {
+    return ESTILOS_NORMALIZADOS[norm];
+  }
+
+  // 3. Coincidencia parcial por prefijo o contenido
+  for (const [clave, estilo] of Object.entries(ESTILOS_NORMALIZADOS)) {
+    if (norm.includes(clave) || clave.includes(norm)) {
+      return estilo;
+    }
+  }
+
+  // 4. Fallback determinista pastel (nunca gris plano)
+  let hash = 0;
+  for (let i = 0; i < asignatura.length; i++) {
+    hash = (hash << 5) - hash + asignatura.charCodeAt(i);
+    hash |= 0;
+  }
+  return PALETA_FALLBACK[Math.abs(hash) % PALETA_FALLBACK.length];
 }
 
 // Compatibilidad

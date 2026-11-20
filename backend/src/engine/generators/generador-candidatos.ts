@@ -29,7 +29,15 @@ export function generarCandidatosParaSesion(
     disponibilidades,
   } = entrada;
 
-  for (const diaSemana of diasPermitidos) {
+  // Para distribuir armoniosamente las clases a lo largo de toda la semana:
+  // Sesion 1 busca preferentemente desde el inicio (Lunes a Viernes)
+  // Sesion 2 busca preferentemente desde el final (Viernes a Lunes)
+  const diasOrdenados =
+    sesion.numeroSesion === 2
+      ? [...diasPermitidos].reverse()
+      : diasPermitidos;
+
+  for (const diaSemana of diasOrdenados) {
     const bloquesDisponibles = obtenerDisponibilidadDocenteEnDia(
       sesion.docenteId,
       diaSemana,

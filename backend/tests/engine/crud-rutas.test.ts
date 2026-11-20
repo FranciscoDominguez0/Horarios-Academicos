@@ -4,6 +4,7 @@ import { enrutadorDocentes } from "../../src/modules/teachers/rutas-docentes.js"
 import { enrutadorMaterias } from "../../src/modules/subjects/rutas-materias.js";
 import { enrutadorGrupos } from "../../src/modules/groups/rutas-grupos.js";
 import { enrutadorAsignaciones } from "../../src/modules/assignments/rutas-asignaciones.js";
+import { enrutadorEscenarios } from "../../src/modules/scenarios/rutas-escenarios.js";
 
 function agruparRutasPorPath(enrutador: any): Map<string, Record<string, boolean>> {
   const mapa = new Map<string, Record<string, boolean>>();
@@ -51,5 +52,10 @@ describe("Capa CRUD de datos académicos", () => {
     expect(rutas.get("/")?.post).toBe(true);
     expect(rutas.get("/:id")?.get).toBe(true);
     expect(rutas.get("/:id/status")?.patch).toBe(true);
+  });
+
+  it("debe registrar ruta para generación de escenarios aleatorios con IA", () => {
+    const rutas = agruparRutasPorPath(enrutadorEscenarios);
+    expect(rutas.get("/generate-random")?.post).toBe(true);
   });
 });
